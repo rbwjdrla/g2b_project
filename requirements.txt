@@ -1,0 +1,32 @@
+#환경변수
+pydantic-settings
+
+# 데이터 수집 (크롤러) - 경량화 버전
+requests==2.31.0
+beautifulsoup4==4.12.3
+lxml==5.1.0
+
+# 데이터 분석/처리
+pandas==2.2.0
+scikit-learn==1.4.0
+numpy==1.26.3
+
+# 백엔드 (API)
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# 데이터베이스 (PostgreSQL)
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.25
+
+# 유틸리티
+python-dotenv==1.0.0
+httpx==0.26.0
+
+# 로깅
+loguru==0.7.2
+
+# 스케줄링 (크롤러 주기 실행)
+apscheduler==3.10.4
