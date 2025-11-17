@@ -56,6 +56,13 @@ class Settings(BaseSettings):
             f"@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
             f"?sslmode={self.db_sslmode}"
         )
+    @property
+    def DB_URL(self) -> str:
+        return self.database_url
+
+    @property
+    def SERVICE_KEY(self) -> str:
+        return self.G2B_API_KEY
 
 
 # ===== 전역 설정 인스턴스 =====

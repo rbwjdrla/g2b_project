@@ -1,6 +1,6 @@
 """
 데이터베이스 테이블 모델 정의
-나라장터 입찰공고 및 발주계획 데이터를 저장할 테이블 구조
+나라장터 입찰공고 / 발주계획 / 계약 / 낙찰 정보를 저장할 테이블 구조
 """
 
 from sqlalchemy import Column, Integer, String, BigInteger, DateTime, Text
@@ -83,3 +83,48 @@ class OrderPlan(Base):
 
     def __repr__(self):
         return f"<OrderPlan(id={self.id}, biz_nm={self.biz_nm}, order_instt_nm={self.order_instt_nm})>"
+
+
+# ============================================================
+# 3️⃣ 계약정보 테이블
+# ============================================================
+class Contract(Base):
+    __tablename__ = "contracts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    cntrct_no = Column(String(100), unique=True, nullable=False, comment="계약번호")
+    cntrct_nm = Column(String(500), nullable=True, comment="계약명")
+    cntrct_instt_nm = Column(String(200), nullable=True, comment="계약기관명")
+    cntrct_mthd_nm = Column(String(100), nullable=True, comment="계약방법명")
+    cntrct_amt = Column(BigInteger, nullable=True, comment="계약금액(원)")
+    cntrct_dt = Column(DateTime, nullable=True, comment="계약일자")
+    cntrct_prd = Column(String(100), nullable=True, comment="계약기간")
+    supler_nm = Column(String(200), nullable=True, comment="수급자명")
+
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    def __repr__(self):
+        return f"<Contract(id={self.id}, cntrct_no={self.cntrct_no}, cntrct_nm={self.cntrct_nm})>"
+
+
+# ============================================================
+# 4️⃣ 낙찰정보 테이블
+# ============================================================
+class Award(Base):
+    __tablename__ = "awards"
+
+    id = Column(Integer, primary_key=True, index=True)
+    bidno = Column(String(100), unique=True, nullable=False, comment="입찰공고번호")
+    bidseq = Column(String(10), nullable=True, comment="입찰차수")
+    bidname = Column(String(500), nullable=True, comment="입찰명")
+    bidwinnm = Column(String(200), nullable=True, comment="낙찰업체명")
+    succamt = Column(BigInteger, nullable=True, comment="낙찰금액(원)")
+    open_date = Column(DateTime, nullable=True, comment="개찰일자")
+    order_instt_nm = Column(String(200), nullable=True, comment="발주기관명")
+
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+
+    def __repr__(self):
+        return f"<Award(id={self.id}, bidno={self.bidno}, bidwinnm={self.bidwinnm})>"

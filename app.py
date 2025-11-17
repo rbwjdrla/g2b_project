@@ -1,8 +1,8 @@
 """
 FastAPI 웹 서버
-공공데이터포털(G2B) API 기반 입찰공고 및 계약정보 데이터 제공
+공공데이터포털(G2B) API 기반 입찰공고 데이터 제공
+(수정본: 입찰공고 / 낙찰공고 수집 추가)
 """
-
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -13,8 +13,7 @@ import logging
 from config import settings
 from database import get_db, init_db
 from models import Bidding
-from g2b_api_client import G2BApiClient
-
+from g2b.main_crawler import run_all
 
 # ===== 로깅 설정 =====
 logging.basicConfig(
@@ -23,30 +22,27 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 # ===== FastAPI 앱 생성 =====
 app = FastAPI(
     title="G2B 입찰정보 API 서버",
-    description="공공데이터포털 API를 통해 수집한 입찰·계약 데이터를 제공합니다.",
-    version="2.1.0",
+    description="공공데이터포털 API를 통해 수집한 입찰공고/발주/계약/낙찰 데이터를 제공합니다.",
+    version="2.0.0",
 )
-
 
 # ===== CORS 설정 =====
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 모든 도메인 허용 (개발 단계)
+    allow_origins=["*"],  # 개발 단계에서는 모든 도메인 허용
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
 # ===== Pydantic 스키마 =====
 from pydantic import BaseModel
 
+
 class BiddingResponse(BaseModel):
-    """입찰공고 응답 스키마"""
     id: int
     notice_number: str
     title: str
@@ -69,7 +65,7 @@ class BiddingResponse(BaseModel):
 
 # ===== 이벤트 =====
 @app.on_event("startup")
-async def startup_event():
+def startup_event():
     """서버 시작 시 DB 초기화"""
     logger.info("🚀 서버 시작 중...")
     init_db()
@@ -80,13 +76,13 @@ async def startup_event():
 @app.get("/")
 def root():
     return {
-        "message": "G2B 입찰·계약정보 API 서버 작동 중",
-        "version": "2.1.0",
+        "message": "G2B 입찰공고 API 서버 작동 중",
+        "version": "2.0.0",
         "docs": "/docs",
     }
 
 
-# ===== API: 입찰공고 목록 조회 =====
+# ===== API: 입찰공고 목록 =====
 @app.get("/api/biddings", response_model=List[BiddingResponse])
 def get_biddings(
     skip: int = Query(0, ge=0, description="건너뛸 개수"),
@@ -119,15 +115,19 @@ def get_bidding(bidding_id: int, db: Session = Depends(get_db)):
 # ===== API: 통계 조회 =====
 @app.get("/api/stats")
 def get_stats(db: Session = Depends(get_db)):
-    from sqlalchemy import func
+    logger.info("📊 통계 조회 요청")
+
     total_count = db.query(Bidding).count()
     week_ago = datetime.now() - timedelta(days=7)
     recent_count = db.query(Bidding).filter(Bidding.created_at >= week_ago).count()
+
+    from sqlalchemy import func
     avg_budget = (
         db.query(func.avg(Bidding.budget_amount))
         .filter(Bidding.budget_amount.isnot(None))
         .scalar()
     )
+
     return {
         "total_biddings": total_count,
         "recent_biddings": recent_count,
@@ -139,6 +139,7 @@ def get_stats(db: Session = Depends(get_db)):
 @app.get("/api/agencies")
 def get_agencies(limit: int = Query(10, ge=1, le=100), db: Session = Depends(get_db)):
     from sqlalchemy import func
+
     agencies = (
         db.query(Bidding.ordering_agency, func.count(Bidding.id).label("count"))
         .filter(Bidding.ordering_agency.isnot(None))
@@ -147,10 +148,11 @@ def get_agencies(limit: int = Query(10, ge=1, le=100), db: Session = Depends(get
         .limit(limit)
         .all()
     )
+
     return [{"agency": agency, "count": count} for agency, count in agencies]
 
 
-# ===== API: 공공데이터포털 수집 실행 =====
+# ===== API: 공공데이터포털 API 수집 실행 =====
 @app.post("/api/crawl")
 async def trigger_g2b_update(days: int = 3):
     """
@@ -159,15 +161,14 @@ async def trigger_g2b_update(days: int = 3):
     logger.info(f"🤖 {days}일간 G2B 데이터 수집 요청")
 
     try:
-        client = G2BApiClient(settings.database_url, settings.G2B_API_KEY)
-
-        # ✅ 날짜 포맷 수정 (YYYYMMDD)
         end_date = datetime.now()
         start_date = end_date - timedelta(days=days)
-        start_str = start_date.strftime("%Y%m%d") + "0000"
-        end_str = end_date.strftime("%Y%m%d") + "2359"
+        start_day = start_date.strftime("%Y%m%d")
+        end_day = end_date.strftime("%Y%m%d")
 
-        client.run(start_str, end_str)
+        # ✅ main_crawler 실행
+        run_all(settings.SERVICE_KEY, start_day, end_day)
+
         return {"status": "success", "message": f"{days}일간 데이터 수집 완료"}
 
     except Exception as e:
@@ -181,9 +182,10 @@ def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
 
-# ===== 서버 실행 =====
+# ===== 서버 실행 (로컬 디버그용) =====
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
         "app:app",
         host=settings.API_HOST,
