@@ -6,17 +6,24 @@ from g2b.award_api import fetch_awards
 
 def run_all(service_key, start_date, end_date):
     logging.info(f"📅 G2B 데이터 업데이트 중... ({start_date} ~ {end_date})")
-
+    #1) 계약정보
     contracts = fetch_contracts(service_key, start_date, end_date)
     logging.info(f"🧾 계약정보 수집 결과: {len(contracts)}건")
+    upserts_contracts(contracts)
 
+    #2) 발주계획
     plans = fetch_plans(service_key, start_date, end_date)
     logging.info(f"🧾 발주계획 수집 결과: {len(plans)}건")
+    upsert_plans(plans)
 
+    #3) 입찰공고
     biddings = fetch_biddings(service_key, start_date, end_date)
     logging.info(f"🧾 입찰공고 수집 결과: {len(biddings)}건")
+    upsert_biddings(biddings)
 
+    #4) 낙찰정보
     awards = fetch_awards(service_key, start_date, end_date)
     logging.info(f"🧾 낙찰정보 수집 결과: {len(awards)}건")
+    upsert_awards(awards)
 
     logging.info("✅ G2B 데이터 업데이트 완료")
