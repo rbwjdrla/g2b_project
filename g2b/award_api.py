@@ -15,3 +15,33 @@ def fetch_awards(service_key, start_date, end_date):
     if not data or "response" not in data:
         return []
     return data["response"].get("body", {}).get("items", [])
+
+
+
+def upsert_awards(items):
+    db = SessionLocal()
+    try:
+        for item in items:
+            cont_no = item.get("cntrctNo")
+            if not cont_no:
+                continue
+
+            obj = db.query(Award).filter(Award.contract_number == cont_no).first()
+            if obj is None:
+                obj = Award(contract_number=cont_no)
+                db.add(obj)
+
+            obj.bid_name = item.get("bidNtceNm")
+            obj.supplier = item.get("sccNm")
+            obj.amount = (
+                int(item.get("sccAmt")) if item.get("sccAmt") else None
+            )
+            obj.open_date = item.get("opengDt")
+
+        db.commit()
+        logging.info(f"💾 낙찰정보 저장 완료: {len(items)}건")
+    except Exception as e:
+        logging.error(f"❌ 낙찰정보 upsert 실패: {e}")
+        db.rollback()
+    finally:
+        db.close()
