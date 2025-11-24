@@ -1,5 +1,5 @@
 from .utils import fetch_data
-from database import SessionLocal
+from g2b.database import SessionLocal
 import logging
 def fetch_contracts(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ao/CntrctInfoService/getCntrctInfoListThng"
