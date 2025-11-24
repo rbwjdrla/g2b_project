@@ -17,6 +17,7 @@ class Bidding(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     notice_number = Column(String(50), unique=True, nullable=False, index=True, comment="공고번호")
+    notice_type = Column(String(50), nullable=True, comment="공고구분 (용역, 물품, 공사 등)") # 추가1
     title = Column(String(500), nullable=False, comment="공고명")
 
     ordering_agency = Column(String(200), nullable=True, comment="발주기관")
@@ -30,6 +31,9 @@ class Bidding(Base):
 
     notice_date = Column(DateTime, nullable=True, comment="공고일시")
     bid_close_date = Column(DateTime, nullable=True, comment="입찰마감일시")
+
+    order_instt_cd = Column(String(50), nullable=True, comment="발주기관코드") # 추가 2
+    order_instt_nm = Column(String(200), nullable=True, comment="발주기관명") # 추가 3
 
     description = Column(Text, nullable=True, comment="공고 상세 내용")
     bidding_url = Column(String(500), nullable=True, comment="나라장터 상세 페이지 URL")
