@@ -3,6 +3,11 @@ from g2b.contract_api import fetch_contracts
 from g2b.plan_api import fetch_plans
 from g2b.bidding_api import fetch_biddings
 from g2b.award_api import fetch_awards
+from g2b.contract_api import fetch_contracts, upsert_contracts
+from g2b.plan_api import fetch_plans, upsert_plans
+from g2b.bidding_api import fetch_biddings, upsert_biddings
+from g2b.award_api import fetch_awards, upsert_awards
+
 
 def run_all(service_key, start_date, end_date):
     logging.info(f"📅 G2B 데이터 업데이트 중... ({start_date} ~ {end_date})")
