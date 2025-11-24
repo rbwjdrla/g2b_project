@@ -1,6 +1,7 @@
 from .utils import fetch_data
 from database import SessionLocal
 import logging
+from models import OrderPlan
 def fetch_plans(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ao/OrderPlanSttusService/getOrderPlanSttusListThng"
     params = {

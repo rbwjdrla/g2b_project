@@ -1,6 +1,7 @@
 from .utils import fetch_data
 from database import SessionLocal
 import logging
+from models import Bidding # added Bidding
 def fetch_biddings(service_key, start_date, end_date):
     apis = [
         "http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoCnstwk",  # 공사
