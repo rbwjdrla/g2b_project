@@ -1,5 +1,5 @@
 from .utils import fetch_data
-
+from database import SessionLocal
 def fetch_awards(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ScsbidInfoService/getOpengResultListInfoCnstwk"
     params = {
