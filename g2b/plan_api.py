@@ -32,13 +32,13 @@ def upsert_plans(items):
                 obj = OrderPlan(order_plan_unty_no=no)
                 db.add(obj)
 
-            obj.biz_name = item.get("bizNm")
+            obj.biz_nm = item.get("bizNm")
             obj.order_year = item.get("orderYear")
-            obj.order_month = item.get("orderMnth")
-            obj.order_amount = (
+            obj.order_mnth = item.get("orderMnth")
+            obj.sum_order_amt = (
                 int(item.get("sumOrderAmt")) if item.get("sumOrderAmt") else None
             )
-            obj.ordering_agency = item.get("orderInsttNm")
+            obj.order_instt_nm = item.get("orderInsttNm")
 
         db.commit()
         logging.info(f"💾 발주계획 저장 완료: {len(items)}건")

@@ -1,5 +1,6 @@
 from .utils import fetch_data
 from g2b.database import SessionLocal
+from g2b.models import award
 import logging
 def fetch_awards(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ScsbidInfoService/getOpengResultListInfoCnstwk"
@@ -32,9 +33,9 @@ def upsert_awards(items):
                 obj = Award(contract_number=cont_no)
                 db.add(obj)
 
-            obj.bid_name = item.get("bidNtceNm")
-            obj.supplier = item.get("sccNm")
-            obj.amount = (
+            obj.bidname = item.get("bidNtceNm")
+            obj.bidwinnm = item.get("sccNm")
+            obj.succamt = (
                 int(item.get("sccAmt")) if item.get("sccAmt") else None
             )
             obj.open_date = item.get("opengDt")

@@ -15,7 +15,7 @@ def run_all(service_key, start_date, end_date):
     contracts = fetch_contracts(service_key, start_date, end_date)
     logging.info(f"🧾 계약정보 수집 결과: {len(contracts)}건")
     if contracts:
-   	 upserts_contracts(contracts)
+   	 upsert_contracts(contracts)
 
     #2) 발주계획
     plans = fetch_plans(service_key, start_date, end_date)
