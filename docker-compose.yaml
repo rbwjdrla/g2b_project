@@ -17,7 +17,7 @@ services:
 
     # 로컬 코드 변경 시 컨테이너 내부에도 반영
     volumes:
-      - .:/app
+      - ./g2b:/app # 마운팅 관련 설정 
 
     # 컨테이너 자동 재시작
     restart: always

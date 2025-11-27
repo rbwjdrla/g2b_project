@@ -11,9 +11,9 @@ from datetime import datetime, timedelta
 import logging
 
 from config import settings
-from g2b.database import get_db, init_db
-from g2b.models import Bidding
-from g2b.main_crawler import run_all
+from database import get_db, init_db
+from models import Bidding
+from main_crawler import run_all
 
 # APScheduler
 from apscheduler.schedulers.background import BackgroundScheduler

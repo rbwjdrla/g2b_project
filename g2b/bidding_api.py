@@ -1,7 +1,8 @@
-from .utils import fetch_data
-from g2b.database import SessionLocal
+from utils import fetch_data
+from database import SessionLocal
 import logging
-from g2b.models import Bidding # added Bidding
+from models import Bidding # added Bidding
+from datetime import datetime
 def fetch_biddings(service_key, start_date, end_date):
     apis = [
         "http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoCnstwk",  # 공사
@@ -59,11 +60,20 @@ def upsert_biddings(items):
             obj.estimated_price = (
                 int(item.get("presmptPrce")) if item.get("presmptPrce") else None
             )
-
-            obj.notice_date = item.get("bidNtceDt")
-            obj.bid_close_date = item.get("bidClseDt")
+            
+            # 날짜 변환
+            obj.notice_date = parse_datetime(item.get("bidNtcDt"))
+            obj.bid_close_date = parse_datetime(item.get("bidClseDt"))
+            
+            obj.order_instt_cd = item.get("ntceInsttCd")
+            obj.order_instt_nm = item.get("ntceInsttNm")
             obj.description = item.get("bidNtceDtlUrl")
             obj.bidding_url = item.get("bidNtceUrl")
+            
+            #obj.notice_date = item.get("bidNtceDt")
+            #obj.bid_close_date = item.get("bidClseDt")
+            #obj.description = item.get("bidNtceDtlUrl")
+            #obj.bidding_url = item.get("bidNtceUrl")
 
         db.commit()
         logging.info(f"💾 입찰공고 저장 완료: {len(items)}건")

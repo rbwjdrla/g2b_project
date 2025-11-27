@@ -1,7 +1,7 @@
-from .utils import fetch_data
-from g2b.database import SessionLocal
+from utils import fetch_data
+from database import SessionLocal
 import logging
-from g2b.models import OrderPlan
+from models import OrderPlan
 def fetch_plans(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ao/OrderPlanSttusService/getOrderPlanSttusListThng"
     params = {

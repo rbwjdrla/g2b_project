@@ -1,6 +1,6 @@
-from .utils import fetch_data
-from g2b.database import SessionLocal
-from g2b.models import award
+from utils import fetch_data
+from database import SessionLocal
+from models import Award
 import logging
 def fetch_awards(service_key, start_date, end_date):
     url = "https://apis.data.go.kr/1230000/ScsbidInfoService/getOpengResultListInfoCnstwk"
