@@ -8,7 +8,7 @@ def fetch_biddings(service_key, start_date, end_date):
     apis = [
         ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoCnstwk", "공사"),  # 공사
         ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServc", "용역"),   # 용역
-        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoFrgcpt", "물품"),  # 물품
+        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoThng", "물품"),  # 물품
     ]
     all_items = []
     inqry_bgn = start_date + "0000"

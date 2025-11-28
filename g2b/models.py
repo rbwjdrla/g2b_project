@@ -3,7 +3,7 @@
 나라장터 입찰공고 / 발주계획 / 계약 / 낙찰 정보를 저장할 테이블 구조
 """
 
-from sqlalchemy import Column, Integer, String, BigInteger, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, BigInteger, Date, Float, UniqueConstraint
 from sqlalchemy.sql import func
 from database import Base
 
@@ -117,18 +117,47 @@ class Contract(Base):
 # ============================================================
 class Award(Base):
     __tablename__ = "awards"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    bidno = Column(String(100), unique=True, nullable=False, comment="입찰공고번호")
-    bidseq = Column(String(10), nullable=True, comment="입찰차수")
-    bidname = Column(String(500), nullable=True, comment="입찰명")
-    bidwinnm = Column(String(200), nullable=True, comment="낙찰업체명")
-    succamt = Column(BigInteger, nullable=True, comment="낙찰금액(원)")
-    open_date = Column(DateTime, nullable=True, comment="개찰일자")
-    order_instt_nm = Column(String(200), nullable=True, comment="발주기관명")
-
-    created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
-
-    def __repr__(self):
-        return f"<Award(id={self.id}, bidno={self.bidno}, bidwinnm={self.bidwinnm})>"
+    
+    # 기본 정보
+    bid_ntce_no = Column(String(50), nullable=False, index=True)  # 입찰공고번호
+    bid_ntce_ord = Column(String(10))                             # 입찰공고차수
+    bid_clsfc_no = Column(String(10))                             # 입찰분류번호
+    rbid_no = Column(String(10))                                  # 재입찰번호
+    notice_type = Column(String(20))                              # 물품/공사/용역
+    
+    # 공고 정보
+    bid_ntce_nm = Column(String(500))                             # 입찰공고명
+    openg_dt = Column(DateTime)                                   # 개찰일시
+    
+    # 낙찰 정보
+    prtcpt_cnum = Column(Integer)                                 # 참가업체수
+    openg_corp_info = Column(Text)                                # 원본 개찰업체정보
+    progrs_div_cd_nm = Column(String(50))                         # 진행상태
+    
+    # 파싱된 낙찰 정보
+    award_company_name = Column(String(200))                      # 낙찰업체명
+    award_business_no = Column(String(50))                        # 사업자번호
+    award_ceo_name = Column(String(100))                          # 대표자명
+    award_amount = Column(BigInteger)                             # 낙찰금액
+    award_rate = Column(Float)                                    # 낙찰률
+    
+    # 기관 정보
+    ntce_instt_cd = Column(String(50))                            # 공고기관코드
+    ntce_instt_nm = Column(String(200))                           # 공고기관명
+    dminstt_cd = Column(String(50))                               # 수요기관코드
+    dminstt_nm = Column(String(200))                              # 수요기관명
+    
+    # 메타 정보
+    inpt_dt = Column(DateTime)                                    # 입력일시
+    rsrvtn_prce_file_existnce_yn = Column(String(1))             # 예정가격파일존재여부
+    openg_rslt_ntc_cntnts = Column(Text)                         # 개찰결과공고내용
+    
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    
+    # 복합 유니크 제약
+    __table_args__ = (
+        UniqueConstraint('bid_ntce_no', 'bid_ntce_ord', 'notice_type', name='uix_award_notice'),
+    )
