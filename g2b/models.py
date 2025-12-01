@@ -96,22 +96,59 @@ class Contract(Base):
     __tablename__ = "contracts"
 
     id = Column(Integer, primary_key=True, index=True)
-    cntrct_no = Column(String(100), unique=True, nullable=False, comment="계약번호")
+    
+    # 기본 정보
+    unty_cntrct_no = Column(String(50), nullable=False, index=True, comment="통합계약번호")
+    bsns_div_nm = Column(String(50), nullable=True, comment="사업구분명")
+    dcsn_cntrct_no = Column(String(50), nullable=True, comment="결정계약번호")
+    cntrct_ref_no = Column(String(50), nullable=True, comment="계약참조번호")
+    contract_type = Column(String(20), nullable=True, comment="계약구분(물품/용역/공사)")
+    
+    # 계약 상세
     cntrct_nm = Column(String(500), nullable=True, comment="계약명")
-    cntrct_instt_nm = Column(String(200), nullable=True, comment="계약기관명")
-    cntrct_mthd_nm = Column(String(100), nullable=True, comment="계약방법명")
-    cntrct_amt = Column(BigInteger, nullable=True, comment="계약금액(원)")
-    cntrct_dt = Column(DateTime, nullable=True, comment="계약일자")
+    cmmn_cntrct_yn = Column(String(1), nullable=True, comment="공동계약여부")
+    lngtrm_ctnu_div_nm = Column(String(50), nullable=True, comment="장기계속구분명")
+    cntrct_cncls_date = Column(Date, nullable=True, comment="계약체결일자")
     cntrct_prd = Column(String(100), nullable=True, comment="계약기간")
-    supler_nm = Column(String(200), nullable=True, comment="수급자명")
-
+    base_law_nm = Column(String(200), nullable=True, comment="근거법령명")
+    
+    # 금액 정보
+    tot_cntrct_amt = Column(BigInteger, nullable=True, comment="총계약금액")
+    thtm_cntrct_amt = Column(BigInteger, nullable=True, comment="당해계약금액")
+    grntymny_rate = Column(String(20), nullable=True, comment="보증금률")
+    pay_div_nm = Column(String(50), nullable=True, comment="지급구분명")
+    
+    # 참조 정보
+    req_no = Column(String(50), nullable=True, comment="요청번호")
+    ntce_no = Column(String(50), nullable=True, comment="공고번호")
+    
+    # 계약기관 정보
+    cntrct_instt_cd = Column(String(50), nullable=True, comment="계약기관코드")
+    cntrct_instt_nm = Column(String(200), nullable=True, comment="계약기관명")
+    cntrct_instt_jrsdctn_div_nm = Column(String(100), nullable=True, comment="계약기관관할구분명")
+    cntrct_instt_chrg_dept_nm = Column(String(200), nullable=True, comment="계약기관담당부서명")
+    cntrct_instt_ofcl_nm = Column(String(100), nullable=True, comment="계약기관담당자명")
+    cntrct_instt_ofcl_tel_no = Column(String(50), nullable=True, comment="계약기관담당자전화번호")
+    cntrct_instt_ofcl_fax_no = Column(String(50), nullable=True, comment="계약기관담당자팩스번호")
+    
+    # 리스트 정보 (JSON 문자열로 저장)
+    dminstt_list = Column(Text, nullable=True, comment="수요기관리스트")
+    corp_list = Column(Text, nullable=True, comment="업체리스트")
+    
+    # URL
+    cntrct_info_url = Column(String(500), nullable=True, comment="계약정보URL")
+    cntrct_dtl_info_url = Column(Text, nullable=True, comment="계약상세정보URL")
+    
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
+    
+    # 복합 유니크 제약
+    __table_args__ = (
+        UniqueConstraint('unty_cntrct_no', 'contract_type', name='uix_contract_unty'),
+    )
 
     def __repr__(self):
-        return f"<Contract(id={self.id}, cntrct_no={self.cntrct_no}, cntrct_nm={self.cntrct_nm})>"
-
-
+        return f"<Contract(id={self.id}, unty_cntrct_no={self.unty_cntrct_no}, cntrct_nm={self.cntrct_nm})>"
 # ============================================================
 # 4️⃣ 낙찰정보 테이블
 # ============================================================
