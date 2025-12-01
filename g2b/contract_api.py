@@ -4,6 +4,7 @@ from models import Contract
 from datetime import datetime
 import logging
 
+
 def fetch_contracts(service_key, start_date, end_date):
     """계약정보 수집 (물품/용역/공사)"""
     
@@ -17,9 +18,9 @@ def fetch_contracts(service_key, start_date, end_date):
     
     all_items = []
     
-    # ✅ YYYYMMDDHHmm 형식으로 변경!
-    inqry_bgn = start_date + "0000"  # 20251125 → 202511250000
-    inqry_end = end_date + "2359"    # 20251128 → 202511282359
+    # YYYYMMDDHHmm 형식으로 변경
+    inqry_bgn = start_date + "0000"
+    inqry_end = end_date + "2359"
     
     for endpoint, contract_type in apis:
         url = f"{base_url}/{endpoint}"
@@ -28,8 +29,8 @@ def fetch_contracts(service_key, start_date, end_date):
             "pageNo": 1,
             "numOfRows": 100,
             "inqryDiv": 1,
-            "inqryBgnDt": inqry_bgn,  # ✅ 12자리
-            "inqryEndDt": inqry_end,  # ✅ 12자리
+            "inqryBgnDt": inqry_bgn,
+            "inqryEndDt": inqry_end,
             "serviceKey": service_key,
             "type": "json"
         }
@@ -38,6 +39,7 @@ def fetch_contracts(service_key, start_date, end_date):
         if data and "response" in data:
             items = data["response"].get("body", {}).get("items", [])
             
+            # 계약 타입 태깅
             for item in items:
                 item["_contract_type"] = contract_type
             
@@ -45,42 +47,108 @@ def fetch_contracts(service_key, start_date, end_date):
     
     return all_items
 
+
 def parse_date(date_str):
-    """YYYYMMDD 형식을 datetime으로 변환"""
-    if not date_str or len(date_str) < 8:
+    """YYYY-MM-DD 형식을 date로 변환"""
+    if not date_str:
         return None
     try:
-        return datetime.strptime(date_str[:8], "%Y%m%d")
+        # "2024-12-03" 형식
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
     except:
         return None
 
+
+def parse_int(value):
+    """문자열을 정수로 변환"""
+    if not value:
+        return None
+    try:
+        return int(value)
+    except:
+        return None
+
+
 def upsert_contracts(items):
+    """계약정보 DB 저장"""
     db = SessionLocal()
+    saved_count = 0
+    
     try:
         for item in items:
-            no = item.get("cntrctNo")
-            if not no:
+            # 통합계약번호 (Primary Key)
+            unty_no = item.get("untyCntrctNo")
+            contract_type = item.get("_contract_type", "")
+            
+            if not unty_no:
                 continue
             
-            #  필드명 수정
-            obj = db.query(Contract).filter(Contract.cntrct_no == no).first()
-            if obj is None:
-                obj = Contract(cntrct_no=no)
-                db.add(obj)
-            
-            #  필드명을 models.py와 일치시킴
-            obj.cntrct_nm = item.get("cntrctNm")
-            obj.cntrct_instt_nm = item.get("cntrctInsttNm")  # orderInsttNm → cntrctInsttNm
-            obj.cntrct_mthd_nm = item.get("cntrctMthdNm")
-            obj.cntrct_amt = int(item.get("cntrctAmt")) if item.get("cntrctAmt") else None
-            obj.cntrct_dt = parse_date(item.get("cntrctDt"))  #  날짜 변환
-            obj.cntrct_prd = item.get("cntrctPrd")
-            obj.supler_nm = item.get("bidwinnm")  # 낙찰업체명
-            
-        db.commit()
-        logging.info(f"💾 계약정보 저장 완료: {len(items)}건")
+            try:
+                # 기존 레코드 확인
+                obj = db.query(Contract).filter(
+                    Contract.unty_cntrct_no == unty_no,
+                    Contract.contract_type == contract_type
+                ).first()
+                
+                if obj is None:
+                    obj = Contract(
+                        unty_cntrct_no=unty_no,
+                        contract_type=contract_type
+                    )
+                    db.add(obj)
+                
+                # 기본 정보
+                obj.bsns_div_nm = item.get("bsnsDivNm")
+                obj.dcsn_cntrct_no = item.get("dcsnCntrctNo")
+                obj.cntrct_ref_no = item.get("cntrctRefNo")
+                
+                # 계약 상세
+                obj.cntrct_nm = item.get("cntrctNm")
+                obj.cmmn_cntrct_yn = item.get("cmmnCntrctYn")
+                obj.lngtrm_ctnu_div_nm = item.get("lngtrmCtnuDivNm")
+                obj.cntrct_cncls_date = parse_date(item.get("cntrctCnclsDate"))
+                obj.cntrct_prd = item.get("cntrctPrd")
+                obj.base_law_nm = item.get("baseLawNm")
+                
+                # 금액 정보
+                obj.tot_cntrct_amt = parse_int(item.get("totCntrctAmt"))
+                obj.thtm_cntrct_amt = parse_int(item.get("thtmCntrctAmt"))
+                obj.grntymny_rate = item.get("grntymnyRate")
+                obj.pay_div_nm = item.get("payDivNm")
+                
+                # 참조 정보
+                obj.req_no = item.get("reqNo")
+                obj.ntce_no = item.get("ntceNo")
+                
+                # 계약기관 정보
+                obj.cntrct_instt_cd = item.get("cntrctInsttCd")
+                obj.cntrct_instt_nm = item.get("cntrctInsttNm")
+                obj.cntrct_instt_jrsdctn_div_nm = item.get("cntrctInsttJrsdctnDivNm")
+                obj.cntrct_instt_chrg_dept_nm = item.get("cntrctInsttChrgDeptNm")
+                obj.cntrct_instt_ofcl_nm = item.get("cntrctInsttOfclNm")
+                obj.cntrct_instt_ofcl_tel_no = item.get("cntrctInsttOfclTelNo")
+                obj.cntrct_instt_ofcl_fax_no = item.get("cntrctInsttOfclFaxNo")
+                
+                # 리스트 정보 (문자열로 저장)
+                obj.dminstt_list = item.get("dminsttList")
+                obj.corp_list = item.get("corpList")
+                
+                # URL
+                obj.cntrct_info_url = item.get("cntrctInfoUrl")
+                obj.cntrct_dtl_info_url = item.get("cntrctDtlInfoUrl")
+                
+                db.commit()
+                saved_count += 1
+                
+            except Exception as e:
+                logging.error(f"❌ 계약정보 저장 실패 ({unty_no}): {e}")
+                db.rollback()
+                continue
+        
+        logging.info(f"💾 계약정보 저장 완료: {saved_count}건")
+        
     except Exception as e:
-        logging.error(f"❌ 계약정보 upsert 실패: {e}")
+        logging.error(f"❌ 계약정보 upsert 전체 실패: {e}")
         db.rollback()
     finally:
         db.close()
