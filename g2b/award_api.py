@@ -23,11 +23,12 @@ def fetch_awards(service_key, start_date, end_date):
     for endpoint, notice_type in apis:
         url = f"{base_url}/{endpoint}"
         page = 1
+        type_items = []  # ✅ 유형별 임시 리스트
         
         while True:
             params = {
                 "pageNo": page,
-                "numOfRows": 1000,
+                "numOfRows": 100,
                 "inqryDiv": 1,
                 "inqryBgnDt": inqry_bgn,
                 "inqryEndDt": inqry_end,
@@ -38,6 +39,7 @@ def fetch_awards(service_key, start_date, end_date):
             data = fetch_data(url, params)
             
             if not data or "response" not in data:
+                logging.warning(f"❌ {notice_type} 낙찰 페이지 {page} 응답 없음")
                 break
             
             body = data["response"].get("body", {})
@@ -45,21 +47,27 @@ def fetch_awards(service_key, start_date, end_date):
             total_count = body.get("totalCount", 0)
             
             if not items:
+                logging.info(f"✅ {notice_type} 낙찰 수집 완료 (총 {len(type_items)}건)")
                 break
             
             # notice_type 태깅
             for item in items:
                 item["_notice_type"] = notice_type
             
-            all_items.extend(items)
+            type_items.extend(items)  # ✅ 유형별 리스트에 추가
             
-            logging.info(f"📄 {notice_type} 낙찰 페이지 {page} 수집: {len(items)}건 (총 {total_count}건 중 {len(all_items)}건)")
+            logging.info(f"📄 {notice_type} 낙찰 페이지 {page}: {len(items)}건 (총 {total_count}건 중 {len(type_items)}건)")
             
-            if len(all_items) >= total_count:
+            # ✅ 유형별 완료 체크
+            if len(type_items) >= total_count:
+                logging.info(f"✅ {notice_type} 낙찰 전체 수집 완료 ({len(type_items)}건)")
                 break
             
             page += 1
+        
+        all_items.extend(type_items)  # ✅ 유형 완료 후 전체에 추가
     
+    logging.info(f"🎉 낙찰정보 전체 수집 완료: {len(all_items)}건")
     return all_items
 
 

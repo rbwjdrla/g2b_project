@@ -20,11 +20,12 @@ def fetch_biddings(service_key, start_date, end_date):
     
     for url, notice_type in apis:
         page = 1
+        type_items = []  # 유형별 임시 리스트
         
         while True:
             params = {
                 "pageNo": page,
-                "numOfRows": 1000,
+                "numOfRows": 100,
                 "inqryDiv": 1,
                 "inqryBgnDt": inqry_bgn,
                 "inqryEndDt": inqry_end,
@@ -35,6 +36,7 @@ def fetch_biddings(service_key, start_date, end_date):
             data = fetch_data(url, params)
             
             if not data or "response" not in data:
+                logging.warning(f"❌ {notice_type} 페이지 {page} 응답 없음")
                 break
             
             body = data["response"].get("body", {})
@@ -42,22 +44,27 @@ def fetch_biddings(service_key, start_date, end_date):
             total_count = body.get("totalCount", 0)
             
             if not items:
+                logging.info(f"✅ {notice_type} 수집 완료 (총 {len(type_items)}건)")
                 break
             
             # notice_type 태깅
             for item in items:
                 item["_notice_type"] = notice_type
             
-            all_items.extend(items)
+            type_items.extend(items)
             
-            logging.info(f"📄 {notice_type} 페이지 {page} 수집: {len(items)}건 (총 {total_count}건 중 {len(all_items)}건)")
+            logging.info(f"📄 {notice_type} 페이지 {page}: {len(items)}건 (총 {total_count}건 중 {len(type_items)}건)")
             
-            # 전체 수집 완료 체크
-            if len(all_items) >= total_count:
+            # 유형별 완료 체크
+            if len(type_items) >= total_count:
+                logging.info(f"✅ {notice_type} 전체 수집 완료 ({len(type_items)}건)")
                 break
             
             page += 1
+        
+        all_items.extend(type_items)
     
+    logging.info(f"🎉 입찰공고 전체 수집 완료: {len(all_items)}건")
     return all_items
 
 
@@ -92,14 +99,24 @@ def upsert_biddings(items):
                     obj = Bidding(notice_number=notice_no)
                     db.add(obj)
                 
-                obj.notice_type = item.get("_notice_type")
+                notice_type = item.get("_notice_type")
+                
+                obj.notice_type = notice_type
                 obj.title = item.get("bidNtceNm")
                 obj.ordering_agency = item.get("ntceInsttNm")
                 obj.demanding_agency = item.get("dminsttNm")
                 obj.contract_method = item.get("cntrctCnclsMthdNm")
                 obj.bidding_method = item.get("bidMethdNm")
-                obj.budget_amount = int(item.get("bdgtAmt")) if item.get("bdgtAmt") else None
+                
+                # ✅ 공사/용역/물품 구분해서 예산액 파싱
+                if notice_type == "물품":
+                    budget_value = item.get("asignBdgtAmt")
+                else:
+                    budget_value = item.get("bdgtAmt")
+                
+                obj.budget_amount = int(budget_value) if budget_value else None
                 obj.estimated_price = int(item.get("presmptPrce")) if item.get("presmptPrce") else None
+                
                 obj.notice_date = parse_datetime(item.get("bidNtceDt"))
                 obj.bid_close_date = parse_datetime(item.get("bidClseDt"))
                 obj.order_instt_cd = item.get("ntceInsttCd")

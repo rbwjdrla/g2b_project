@@ -12,10 +12,10 @@ from award_api import fetch_awards, upsert_awards
 def run_all(service_key, start_date, end_date):
     logging.info(f"📅 G2B 데이터 업데이트 중... ({start_date} ~ {end_date})")
     #1) 계약정보
-    contracts = fetch_contracts(service_key, start_date, end_date)
-    logging.info(f"🧾 계약정보 수집 결과: {len(contracts)}건")
-    if contracts:
-   	 upsert_contracts(contracts)
+    #contracts = fetch_contracts(service_key, start_date, end_date)
+    #logging.info(f"🧾 계약정보 수집 결과: {len(contracts)}건")
+    #if contracts:
+   	 #upsert_contracts(contracts)
 
     #2) 발주계획
     plans = fetch_plans(service_key, start_date, end_date)

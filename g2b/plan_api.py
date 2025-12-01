@@ -15,7 +15,7 @@ def fetch_plans(service_key, start_date, end_date):
     while True:
         params = {
             "pageNo": page,
-            "numOfRows": 1000,
+            "numOfRows": 100,
             "inqryDiv": 1,
             "orderBgnYm": start_date[:6],
             "orderEndYm": end_date[:6],
