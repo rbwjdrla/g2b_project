@@ -80,22 +80,18 @@ scheduler = BackgroundScheduler()
 
 def scheduled_job():
     """
-    매일 새벽 3시 자동으로 데이터 수집
+    매일 새벽 3시 자동으로 데이터 수집 - 당일만
     """
-    logger.info("⏳ 자동 스케줄러 실행: 어제~오늘 데이터 수집 시작")
+    logger.info("⏳ 자동 스케줄러 실행: 당일 데이터 수집 시작")
 
     try:
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=1)
-        start_day = start_date.strftime("%Y%m%d")
-        end_day = end_date.strftime("%Y%m%d")
-
-        run_all(settings.SERVICE_KEY, start_day, end_day)
-        logger.info("✅ 자동 데이터 수집 완료")
+        today = datetime.now().strftime("%Y%m%d")
+        
+        run_all(settings.SERVICE_KEY, today, today)
+        logger.info(f"✅ 자동 데이터 수집 완료 ({today})")
 
     except Exception as e:
         logger.error(f"❌ 스케줄러 오류: {e}")
-
 
 @app.on_event("startup")
 def start_scheduler():

@@ -1,14 +1,16 @@
 import requests
 import logging
 
-
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
+
 def fetch_data(url, params):
+    r = None  # ✅ 먼저 정의!
+    
     try:
         r = requests.get(url, params=params, timeout=15)
         
-        # ✅ raise_for_status() 전에 응답 내용 먼저 확인
+        # 응답 내용 먼저 확인
         logging.info(f"🌐 URL: {url}")
         logging.info(f"📊 Status Code: {r.status_code}")
         logging.info(f"🔗 Full URL: {r.url}")
@@ -36,8 +38,13 @@ def fetch_data(url, params):
         
     except requests.exceptions.RequestException as e:
         logging.error(f"❌ API 요청 실패: {url} ({e})")
-        logging.error(f"resp.text: {getattr(r, 'text', 'no response')[:500]}")
+        
+        # ✅ r이 None이 아닐 때만 text 접근
+        if r is not None:
+            logging.error(f"resp.text: {r.text[:500]}")
+        
         return None
+        
     except Exception as e:
         logging.error(f"❌ 예상치 못한 에러: {e}")
         return None
