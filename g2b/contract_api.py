@@ -5,23 +5,45 @@ from datetime import datetime
 import logging
 
 def fetch_contracts(service_key, start_date, end_date):
-    url = "https://apis.data.go.kr/1230000/ao/CntrctInfoService/getCntrctInfoListThng"
+    """계약정보 수집 (물품/용역/공사)"""
     
-    params = {
-        "pageNo": 1,
-        "numOfRows": 100,
-        "inqryDiv": 2,
-        "inqryBgnDt": start_date,  # ✅ 20251124 그대로
-        "inqryEndDt": end_date,    # ✅ 20251127 그대로
-        "serviceKey": service_key,
-        "type": "json"
-    }
+    base_url = "https://apis.data.go.kr/1230000/ao/CntrctInfoService"
     
-    data = fetch_data(url, params)
-    if data and "response" in data:
-        items = data["response"].get("body", {}).get("items", [])
-        return items if items else []
-    return []
+    apis = [
+        ("getCntrctInfoListThng", "물품"),
+        ("getCntrctInfoListServc", "용역"),
+        ("getCntrctInfoListCnstwk", "공사")
+    ]
+    
+    all_items = []
+    
+    # ✅ YYYYMMDDHHmm 형식으로 변경!
+    inqry_bgn = start_date + "0000"  # 20251125 → 202511250000
+    inqry_end = end_date + "2359"    # 20251128 → 202511282359
+    
+    for endpoint, contract_type in apis:
+        url = f"{base_url}/{endpoint}"
+        
+        params = {
+            "pageNo": 1,
+            "numOfRows": 100,
+            "inqryDiv": 1,
+            "inqryBgnDt": inqry_bgn,  # ✅ 12자리
+            "inqryEndDt": inqry_end,  # ✅ 12자리
+            "serviceKey": service_key,
+            "type": "json"
+        }
+        
+        data = fetch_data(url, params)
+        if data and "response" in data:
+            items = data["response"].get("body", {}).get("items", [])
+            
+            for item in items:
+                item["_contract_type"] = contract_type
+            
+            all_items.extend(items)
+    
+    return all_items
 
 def parse_date(date_str):
     """YYYYMMDD 형식을 datetime으로 변환"""
