@@ -4,10 +4,10 @@ from database import SessionLocal
 import logging
 from models import Award
 
+
 def fetch_awards(service_key, start_date, end_date):
-    """낙찰정보 수집 (물품/공사/용역)"""
+    """낙찰정보 수집 (물품/공사/용역) - 전체 페이징 처리"""
     
-    # ✅ 올바른 Base URL
     base_url = "https://apis.data.go.kr/1230000/as/ScsbidInfoService"
     
     apis = [
@@ -22,26 +22,43 @@ def fetch_awards(service_key, start_date, end_date):
     
     for endpoint, notice_type in apis:
         url = f"{base_url}/{endpoint}"
+        page = 1
         
-        params = {
-            "pageNo": 1,
-            "numOfRows": 100,
-            "inqryDiv": 1,
-            "inqryBgnDt": inqry_bgn,
-            "inqryEndDt": inqry_end,
-            "serviceKey": service_key,
-            "type": "json"
-        }
-        
-        data = fetch_data(url, params)
-        if data and "response" in data:
-            items = data["response"].get("body", {}).get("items", [])
+        while True:
+            params = {
+                "pageNo": page,
+                "numOfRows": 1000,
+                "inqryDiv": 1,
+                "inqryBgnDt": inqry_bgn,
+                "inqryEndDt": inqry_end,
+                "serviceKey": service_key,
+                "type": "json"
+            }
             
-            # notice_type 추가
+            data = fetch_data(url, params)
+            
+            if not data or "response" not in data:
+                break
+            
+            body = data["response"].get("body", {})
+            items = body.get("items", [])
+            total_count = body.get("totalCount", 0)
+            
+            if not items:
+                break
+            
+            # notice_type 태깅
             for item in items:
                 item["_notice_type"] = notice_type
             
             all_items.extend(items)
+            
+            logging.info(f"📄 {notice_type} 낙찰 페이지 {page} 수집: {len(items)}건 (총 {total_count}건 중 {len(all_items)}건)")
+            
+            if len(all_items) >= total_count:
+                break
+            
+            page += 1
     
     return all_items
 
@@ -91,7 +108,6 @@ def upsert_awards(items):
                 if not bid_ntce_no:
                     continue
                 
-                # 기존 레코드 조회
                 obj = db.query(Award).filter(
                     Award.bid_ntce_no == bid_ntce_no,
                     Award.bid_ntce_ord == bid_ntce_ord,
@@ -106,34 +122,25 @@ def upsert_awards(items):
                     )
                     db.add(obj)
                 
-                # 기본 정보
                 obj.bid_clsfc_no = item.get("bidClsfcNo")
                 obj.rbid_no = item.get("rbidNo")
                 obj.bid_ntce_nm = item.get("bidNtceNm")
                 obj.openg_dt = parse_datetime(item.get("opengDt"))
-                
-                # 낙찰 정보
                 obj.prtcpt_cnum = int(item.get("prtcptCnum", 0))
                 obj.openg_corp_info = item.get("opengCorpInfo")
                 obj.progrs_div_cd_nm = item.get("progrsDivCdNm")
                 
-                # 개찰업체정보 파싱
-                company, business_no, ceo, amount, rate = parse_openg_corp_info(
-                    item.get("opengCorpInfo")
-                )
+                company, business_no, ceo, amount, rate = parse_openg_corp_info(item.get("opengCorpInfo"))
                 obj.award_company_name = company
                 obj.award_business_no = business_no
                 obj.award_ceo_name = ceo
                 obj.award_amount = amount
                 obj.award_rate = rate
                 
-                # 기관 정보
                 obj.ntce_instt_cd = item.get("ntceInsttCd")
                 obj.ntce_instt_nm = item.get("ntceInsttNm")
                 obj.dminstt_cd = item.get("dminsttCd")
                 obj.dminstt_nm = item.get("dminsttNm")
-                
-                # 메타 정보
                 obj.inpt_dt = parse_datetime(item.get("inptDt"))
                 obj.rsrvtn_prce_file_existnce_yn = item.get("rsrvtnPrceFileExistnceYn")
                 obj.openg_rslt_ntc_cntnts = item.get("opengRsltNtcCntnts")

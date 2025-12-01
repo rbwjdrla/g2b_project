@@ -6,7 +6,7 @@ import logging
 
 
 def fetch_contracts(service_key, start_date, end_date):
-    """계약정보 수집 (물품/용역/공사)"""
+    """계약정보 수집 (물품/용역/공사) - 전체 페이징 처리"""
     
     base_url = "https://apis.data.go.kr/1230000/ao/CntrctInfoService"
     
@@ -17,33 +17,48 @@ def fetch_contracts(service_key, start_date, end_date):
     ]
     
     all_items = []
-    
-    # YYYYMMDDHHmm 형식으로 변경
     inqry_bgn = start_date + "0000"
     inqry_end = end_date + "2359"
     
     for endpoint, contract_type in apis:
         url = f"{base_url}/{endpoint}"
+        page = 1
         
-        params = {
-            "pageNo": 1,
-            "numOfRows": 100,
-            "inqryDiv": 1,
-            "inqryBgnDt": inqry_bgn,
-            "inqryEndDt": inqry_end,
-            "serviceKey": service_key,
-            "type": "json"
-        }
-        
-        data = fetch_data(url, params)
-        if data and "response" in data:
-            items = data["response"].get("body", {}).get("items", [])
+        while True:
+            params = {
+                "pageNo": page,
+                "numOfRows": 1000,
+                "inqryDiv": 1,
+                "inqryBgnDt": inqry_bgn,
+                "inqryEndDt": inqry_end,
+                "serviceKey": service_key,
+                "type": "json"
+            }
+            
+            data = fetch_data(url, params)
+            
+            if not data or "response" not in data:
+                break
+            
+            body = data["response"].get("body", {})
+            items = body.get("items", [])
+            total_count = body.get("totalCount", 0)
+            
+            if not items:
+                break
             
             # 계약 타입 태깅
             for item in items:
                 item["_contract_type"] = contract_type
             
             all_items.extend(items)
+            
+            logging.info(f"📄 {contract_type} 계약 페이지 {page} 수집: {len(items)}건 (총 {total_count}건 중 {len(all_items)}건)")
+            
+            if len(all_items) >= total_count:
+                break
+            
+            page += 1
     
     return all_items
 

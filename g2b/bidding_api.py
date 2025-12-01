@@ -4,52 +4,78 @@ from database import SessionLocal
 import logging
 from models import Bidding
 
+
 def fetch_biddings(service_key, start_date, end_date):
+    """입찰공고 수집 (전체 페이징 처리)"""
+    
     apis = [
-        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoCnstwk", "공사"),  # 공사
-        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServc", "용역"),   # 용역
-        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoThng", "물품"),  # 물품
+        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoCnstwk", "공사"),
+        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoServc", "용역"),
+        ("http://apis.data.go.kr/1230000/ad/BidPublicInfoService/getBidPblancListInfoThng", "물품"),
     ]
+    
     all_items = []
     inqry_bgn = start_date + "0000"
     inqry_end = end_date + "2359"
     
-    for url, notice_type in apis:  # notice_type 추가
-        params = {
-            "pageNo": 1,
-            "numOfRows": 100,
-            "inqryDiv": 1,
-            "inqryBgnDt": inqry_bgn,
-            "inqryEndDt": inqry_end,
-            "serviceKey": service_key,
-            "type": "json"
-        }
-        data = fetch_data(url, params)
-        if data and "response" in data:
-            items = data["response"].get("body", {}).get("items", [])
-            # 각 item에 notice_type 추가
+    for url, notice_type in apis:
+        page = 1
+        
+        while True:
+            params = {
+                "pageNo": page,
+                "numOfRows": 1000,
+                "inqryDiv": 1,
+                "inqryBgnDt": inqry_bgn,
+                "inqryEndDt": inqry_end,
+                "serviceKey": service_key,
+                "type": "json"
+            }
+            
+            data = fetch_data(url, params)
+            
+            if not data or "response" not in data:
+                break
+            
+            body = data["response"].get("body", {})
+            items = body.get("items", [])
+            total_count = body.get("totalCount", 0)
+            
+            if not items:
+                break
+            
+            # notice_type 태깅
             for item in items:
                 item["_notice_type"] = notice_type
+            
             all_items.extend(items)
+            
+            logging.info(f"📄 {notice_type} 페이지 {page} 수집: {len(items)}건 (총 {total_count}건 중 {len(all_items)}건)")
+            
+            # 전체 수집 완료 체크
+            if len(all_items) >= total_count:
+                break
+            
+            page += 1
     
     return all_items
+
 
 def parse_datetime(date_str):
     """날짜 문자열을 datetime으로 변환"""
     if not date_str:
         return None
     try:
-        # "2025-11-24 08:20:31" 형식
         return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
     except:
         try:
-            # "202511240820" 형식 (만약을 위해)
             return datetime.strptime(date_str[:12], "%Y%m%d%H%M")
         except:
             return None
 
 
 def upsert_biddings(items):
+    """입찰공고 DB 저장"""
     db = SessionLocal()
     success_count = 0
     
@@ -60,15 +86,12 @@ def upsert_biddings(items):
                 if not notice_no:
                     continue
                 
-                # 기존 레코드 조회
                 obj = db.query(Bidding).filter(Bidding.notice_number == notice_no).first()
                 
                 if obj is None:
-                    # 새 레코드 생성
                     obj = Bidding(notice_number=notice_no)
                     db.add(obj)
                 
-                # 필드 업데이트
                 obj.notice_type = item.get("_notice_type")
                 obj.title = item.get("bidNtceNm")
                 obj.ordering_agency = item.get("ntceInsttNm")
@@ -84,7 +107,6 @@ def upsert_biddings(items):
                 obj.description = item.get("bidNtceDtlUrl")
                 obj.bidding_url = item.get("bidNtceUrl")
                 
-                # ✅ 각 아이템마다 즉시 커밋!
                 db.commit()
                 success_count += 1
                 
