@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'g2b-frontend/**'  # 프론트 폴더만 변경 시 실행
+   workflow_dispatch:
 
 jobs:
   build-and-deploy:
