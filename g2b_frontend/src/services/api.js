@@ -1,9 +1,7 @@
 import axios from 'axios';
 
-// API 기본 URL
 const API_BASE_URL = 'http://43.201.32.63:8000/api';
 
-// axios 인스턴스 생성
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -12,7 +10,7 @@ const api = axios.create({
   },
 });
 
-// 입찰공고 목록 조회
+// ==================== 입찰공고 ====================
 export const getBiddings = async (params = {}) => {
   try {
     const response = await api.get('/biddings', { params });
@@ -23,7 +21,6 @@ export const getBiddings = async (params = {}) => {
   }
 };
 
-// 입찰공고 상세 조회
 export const getBiddingDetail = async (noticeNumber) => {
   try {
     const response = await api.get(`/biddings/${noticeNumber}`);
@@ -34,7 +31,7 @@ export const getBiddingDetail = async (noticeNumber) => {
   }
 };
 
-// 낙찰정보 목록 조회
+// ==================== 낙찰정보 ====================
 export const getAwards = async (params = {}) => {
   try {
     const response = await api.get('/awards', { params });
@@ -45,13 +42,54 @@ export const getAwards = async (params = {}) => {
   }
 };
 
-// 발주계획 목록 조회
+// ==================== 발주계획 ====================
 export const getOrderPlans = async (params = {}) => {
   try {
-    const response = await api.get('/order-plans', { params });
+    const response = await api.get('/orderplans', { params });  // ← 수정!
     return response.data;
   } catch (error) {
     console.error('발주계획 조회 에러:', error);
+    throw error;
+  }
+};
+
+// ==================== 통계 ====================
+export const getStatisticsSummary = async () => {
+  try {
+    const response = await api.get('/statistics/summary');
+    return response.data;
+  } catch (error) {
+    console.error('통계 요약 조회 에러:', error);
+    throw error;
+  }
+};
+
+export const getDailyStatistics = async (days = 30) => {
+  try {
+    const response = await api.get('/statistics/daily', { params: { days } });
+    return response.data;
+  } catch (error) {
+    console.error('일별 통계 조회 에러:', error);
+    throw error;
+  }
+};
+
+export const getTopAgencies = async (limit = 10) => {
+  try {
+    const response = await api.get('/statistics/top-agencies', { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.error('TOP 기관 조회 에러:', error);
+    throw error;
+  }
+};
+
+export const getStatisticsByType = async () => {
+  try {
+    const response = await api.get('/statistics/by-type');
+    return response.data;
+  } catch (error) {
+    console.error('유형별 통계 조회 에러:', error);
     throw error;
   }
 };
