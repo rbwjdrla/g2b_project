@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timedelta
 from config import settings
+import gc
 
 # 상대 경로 import
 from .bidding_api import fetch_biddings, upsert_biddings
@@ -58,3 +59,5 @@ def run_all():
     except Exception as e:
         logger.error(f"❌ G2B 데이터 수집 실패: {e}")
         raise
+    finally:
+        gc.collect()
