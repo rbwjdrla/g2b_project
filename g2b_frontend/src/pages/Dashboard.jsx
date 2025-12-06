@@ -246,56 +246,47 @@ function Dashboard() {
         </Box>
       </Paper>
 
-      {/* 입찰공고 목록 (메인) */}
-      <BiddingsList
-        biddings={recentBiddings}
-        formatAmount={formatAmount}
-        total={total}
-        page={page}
-        limit={limit}
-        onPageChange={handlePageChange}
-        onItemClick={handleItemClick}
-      />
+      {/* 메인 레이아웃: 왼쪽 입찰공고, 오른쪽 통계 */}
+      <Grid container spacing={3}>
+        {/* 왼쪽: 입찰공고 목록 */}
+        <Grid item xs={12} lg={7}>
+          <BiddingsList
+            biddings={recentBiddings}
+            formatAmount={formatAmount}
+            total={total}
+            page={page}
+            limit={limit}
+            onPageChange={handlePageChange}
+            onItemClick={handleItemClick}
+          />
+        </Grid>
 
-      {/* 차트 & 통계 (하단) */}
-      <Box sx={{ mt: 4 }}>
-        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-          📊 통계 및 분석
-        </Typography>
-
-        {/* 차트 */}
-        <Grid container spacing={3} mb={3}>
-          <Grid item xs={12} lg={8}>
+        {/* 오른쪽: 통계 */}
+        <Grid item xs={12} lg={5}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            {/* 일별 추이 차트 */}
             <Paper sx={{ p: 3, height: 400 }}>
               <DailyChart data={dailyStats} />
             </Paper>
-          </Grid>
-          <Grid item xs={12} lg={4}>
+
+            {/* 유형별 차트 */}
             <Paper sx={{ p: 3, height: 400 }}>
               <TypeChart data={typeStats} />
             </Paper>
-          </Grid>
-        </Grid>
 
-        {/* TOP 기관 바 차트 */}
-        <Grid container spacing={3} mb={3}>
-          <Grid item xs={12}>
-            <Paper sx={{ p: 3, height: 500 }}>
-              <AgencyChart data={topAgencies} />
-            </Paper>
-          </Grid>
-        </Grid>
-
-        {/* TOP 5 기관 테이블 */}
-        <Grid container spacing={3}>
-          <Grid item xs={12}>
+            {/* TOP 5 기관 테이블 */}
             <TopAgenciesTable
               agencies={topAgencies}
               formatAmount={formatAmount}
             />
-          </Grid>
+
+            {/* TOP 기관 바 차트 */}
+            <Paper sx={{ p: 3, height: 500 }}>
+              <AgencyChart data={topAgencies} />
+            </Paper>
+          </Box>
         </Grid>
-      </Box>
+      </Grid>
 
       {/* 상세 모달 */}
       <BiddingDetailModal
