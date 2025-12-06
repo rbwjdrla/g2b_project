@@ -1,5 +1,12 @@
 import { useState, useEffect } from "react";
-import { Box, Grid, Paper, CircularProgress, Button } from "@mui/material";
+import {
+  Box,
+  Grid,
+  Paper,
+  CircularProgress,
+  Button,
+  Typography,
+} from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,7 +24,6 @@ import dayjs from "dayjs";
 // API
 import {
   getBiddings,
-  getStatisticsSummary,
   getDailyStatistics,
   getTopAgencies,
   getStatisticsByType,
@@ -32,6 +38,7 @@ import TypeChart from "../components/charts/TypeChart";
 import AgencyChart from "../components/charts/AgencyChart";
 import TopAgenciesTable from "../components/tables/TopAgenciesTable";
 import BiddingsList from "../components/tables/BiddingsList";
+import BiddingDetailModal from "../components/BiddingDetailModal";
 
 // Chart.js 등록
 ChartJS.register(
@@ -74,6 +81,15 @@ function Dashboard() {
   const [noticeType, setNoticeType] = useState("");
   const [searchText, setSearchText] = useState("");
 
+  // 페이징 State
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+  const [total, setTotal] = useState(0);
+
+  // 상세 모달 State
+  const [selectedBidding, setSelectedBidding] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
   // 데이터 로드
   useEffect(() => {
     loadData();
@@ -85,11 +101,12 @@ function Dashboard() {
 
       // 최근 입찰공고
       const biddingsData = await getBiddings({
-        limit: 20,
-        skip: 0,
+        limit: limit,
+        skip: (page - 1) * limit,
       });
-      if (biddingsData.items) {
-        setRecentBiddings(biddingsData.items);
+      if (biddingsData) {
+        setRecentBiddings(biddingsData.items || []);
+        setTotal(biddingsData.total || 0);
       }
 
       // TOP 기관
@@ -112,10 +129,11 @@ function Dashboard() {
 
   // 필터 적용
   const handleFilter = async () => {
+    setPage(1); // 페이지 초기화
     try {
       setLoading(true);
       const params = {
-        limit: 20,
+        limit: limit,
         skip: 0,
         notice_type: noticeType || undefined,
         search: searchText || undefined,
@@ -126,8 +144,9 @@ function Dashboard() {
       const biddingsData = await getBiddings(params);
       console.log("검색 결과:", biddingsData);
 
-      if (biddingsData.items) {
-        setRecentBiddings(biddingsData.items);
+      if (biddingsData) {
+        setRecentBiddings(biddingsData.items || []);
+        setTotal(biddingsData.total || 0);
       }
     } catch (error) {
       console.error("필터 에러:", error);
@@ -142,7 +161,45 @@ function Dashboard() {
     setEndDate(dayjs());
     setNoticeType("");
     setSearchText("");
+    setPage(1);
     loadData();
+  };
+
+  // 페이지 변경
+  const handlePageChange = async (newPage) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    try {
+      setLoading(true);
+      const params = {
+        limit: limit,
+        skip: (newPage - 1) * limit,
+        notice_type: noticeType || undefined,
+        search: searchText || undefined,
+      };
+
+      const biddingsData = await getBiddings(params);
+      if (biddingsData) {
+        setRecentBiddings(biddingsData.items || []);
+        setTotal(biddingsData.total || 0);
+      }
+    } catch (error) {
+      console.error("페이지 변경 에러:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 상세 모달
+  const handleItemClick = (bidding) => {
+    setSelectedBidding(bidding);
+    setModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setModalOpen(false);
+    setSelectedBidding(null);
   };
 
   if (loading) {
@@ -189,45 +246,64 @@ function Dashboard() {
         </Box>
       </Paper>
 
-      {/* 차트 */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12} lg={8}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <DailyChart data={dailyStats} />
-          </Paper>
-        </Grid>
-        <Grid item xs={12} lg={4}>
-          <Paper sx={{ p: 3, height: 400 }}>
-            <TypeChart data={typeStats} />
-          </Paper>
-        </Grid>
-      </Grid>
+      {/* 입찰공고 목록 (메인) */}
+      <BiddingsList
+        biddings={recentBiddings}
+        formatAmount={formatAmount}
+        total={total}
+        page={page}
+        limit={limit}
+        onPageChange={handlePageChange}
+        onItemClick={handleItemClick}
+      />
 
-      {/* TOP 기관 바 차트 */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12}>
-          <Paper sx={{ p: 3, height: 500 }}>
-            <AgencyChart data={topAgencies} />
-          </Paper>
-        </Grid>
-      </Grid>
+      {/* 차트 & 통계 (하단) */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
+          📊 통계 및 분석
+        </Typography>
 
-      {/* TOP 5 기관 테이블 */}
-      <Grid container spacing={3} mb={3}>
-        <Grid item xs={12}>
-          <TopAgenciesTable
-            agencies={topAgencies}
-            formatAmount={formatAmount}
-          />
+        {/* 차트 */}
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12} lg={8}>
+            <Paper sx={{ p: 3, height: 400 }}>
+              <DailyChart data={dailyStats} />
+            </Paper>
+          </Grid>
+          <Grid item xs={12} lg={4}>
+            <Paper sx={{ p: 3, height: 400 }}>
+              <TypeChart data={typeStats} />
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
 
-      {/* 최근 입찰공고 */}
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <BiddingsList biddings={recentBiddings} formatAmount={formatAmount} />
+        {/* TOP 기관 바 차트 */}
+        <Grid container spacing={3} mb={3}>
+          <Grid item xs={12}>
+            <Paper sx={{ p: 3, height: 500 }}>
+              <AgencyChart data={topAgencies} />
+            </Paper>
+          </Grid>
         </Grid>
-      </Grid>
+
+        {/* TOP 5 기관 테이블 */}
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <TopAgenciesTable
+              agencies={topAgencies}
+              formatAmount={formatAmount}
+            />
+          </Grid>
+        </Grid>
+      </Box>
+
+      {/* 상세 모달 */}
+      <BiddingDetailModal
+        open={modalOpen}
+        onClose={handleModalClose}
+        bidding={selectedBidding}
+        formatAmount={formatAmount}
+      />
     </Box>
   );
 }
