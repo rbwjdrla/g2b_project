@@ -1,20 +1,5 @@
 import { useState, useEffect } from "react";
-import {
-  Container,
-  Grid,
-  Paper,
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-} from "@mui/material";
+import { Container, Grid, Paper, Box, CircularProgress } from "@mui/material";
 import {
   Assessment as AssessmentIcon,
   Gavel as GavelIcon,
@@ -33,7 +18,9 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { Line, Bar, Pie } from "react-chartjs-2";
+import dayjs from "dayjs";
+
+// API
 import {
   getBiddings,
   getStatisticsSummary,
@@ -41,6 +28,17 @@ import {
   getTopAgencies,
   getStatisticsByType,
 } from "../services/api";
+
+// Components
+import StatCard from "../components/StatCard";
+import DateRangeFilter from "../components/filters/DateRangeFilter";
+import TypeFilter from "../components/filters/TypeFilter";
+import SearchBar from "../components/filters/SearchBar";
+import DailyChart from "../components/charts/DailyChart";
+import TypeChart from "../components/charts/TypeChart";
+import AgencyChart from "../components/charts/AgencyChart";
+import TopAgenciesTable from "../components/tables/TopAgenciesTable";
+import BiddingsList from "../components/tables/BiddingsList";
 
 // Chart.js 등록
 ChartJS.register(
@@ -56,6 +54,7 @@ ChartJS.register(
 );
 
 function Dashboard() {
+  // 금액 포맷
   const formatAmount = (amount) => {
     if (!amount && amount !== 0) return "-";
     if (amount >= 1000000000000) {
@@ -69,6 +68,7 @@ function Dashboard() {
     }
   };
 
+  // State
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalBiddings: 0,
@@ -81,6 +81,13 @@ function Dashboard() {
   const [dailyStats, setDailyStats] = useState([]);
   const [typeStats, setTypeStats] = useState([]);
 
+  // 필터 State
+  const [startDate, setStartDate] = useState(dayjs().subtract(30, "day"));
+  const [endDate, setEndDate] = useState(dayjs());
+  const [noticeType, setNoticeType] = useState("");
+  const [searchText, setSearchText] = useState("");
+
+  // 데이터 로드
   useEffect(() => {
     loadData();
   }, []);
@@ -89,7 +96,7 @@ function Dashboard() {
     try {
       setLoading(true);
 
-      // 통계 데이터
+      // 통계
       const statsData = await getStatisticsSummary();
       setStats({
         totalBiddings: statsData.total_biddings || 0,
@@ -122,131 +129,34 @@ function Dashboard() {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, color, suffix = "건" }) => (
-    <Card sx={{ height: "100%", bgcolor: color }}>
-      <CardContent>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box>
-            <Typography color="white" variant="h6" gutterBottom>
-              {title}
-            </Typography>
-            <Typography color="white" variant="h4">
-              {typeof value === "number" ? value.toLocaleString() : value}
-              {suffix}
-            </Typography>
-          </Box>
-          <Icon sx={{ fontSize: 48, color: "white", opacity: 0.7 }} />
-        </Box>
-      </CardContent>
-    </Card>
-  );
+  // 필터 적용
+  const handleFilter = async () => {
+    try {
+      setLoading(true);
+      const params = {
+        limit: 10,
+        notice_type: noticeType,
+        search: searchText,
+      };
 
-  // 일별 차트 데이터
-  const dailyChartData = {
-    labels: dailyStats.map((d) => d.date.substring(5)), // MM-DD
-    datasets: [
-      {
-        label: "입찰공고 건수",
-        data: dailyStats.map((d) => d.count),
-        borderColor: "rgb(25, 118, 210)",
-        backgroundColor: "rgba(25, 118, 210, 0.5)",
-        tension: 0.3,
-      },
-    ],
+      const biddingsData = await getBiddings(params);
+      if (biddingsData.items) {
+        setRecentBiddings(biddingsData.items);
+      }
+    } catch (error) {
+      console.error("필터 에러:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const dailyChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      title: {
-        display: true,
-        text: "최근 30일 입찰공고 추이",
-        font: { size: 16 },
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-      },
-    },
-  };
-
-  // 유형별 파이 차트 데이터
-  const typeChartData = {
-    labels: typeStats.map((t) => t.type || "미분류"),
-    datasets: [
-      {
-        label: "건수",
-        data: typeStats.map((t) => t.count),
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.6)",
-          "rgba(54, 162, 235, 0.6)",
-          "rgba(255, 206, 86, 0.6)",
-          "rgba(75, 192, 192, 0.6)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(255, 206, 86, 1)",
-          "rgba(75, 192, 192, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const pieChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "right",
-      },
-      title: {
-        display: true,
-        text: "유형별 입찰공고 분포",
-        font: { size: 16 },
-      },
-    },
-  };
-
-  // TOP 기관 바 차트
-  const agencyChartData = {
-    labels: topAgencies.map((a) => a.agency),
-    datasets: [
-      {
-        label: "공고 건수",
-        data: topAgencies.map((a) => a.count),
-        backgroundColor: "rgba(25, 118, 210, 0.6)",
-        borderColor: "rgba(25, 118, 210, 1)",
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const barChartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    indexAxis: "y",
-    plugins: {
-      legend: {
-        display: false,
-      },
-      title: {
-        display: true,
-        text: "TOP 10 발주기관",
-        font: { size: 16 },
-      },
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-      },
-    },
+  // 필터 초기화
+  const handleReset = () => {
+    setStartDate(dayjs().subtract(30, "day"));
+    setEndDate(dayjs());
+    setNoticeType("");
+    setSearchText("");
+    loadData();
   };
 
   if (loading) {
@@ -263,7 +173,7 @@ function Dashboard() {
   }
 
   return (
-    <Container maxWidth={false} sx={{ px: 3, mt: 4, mb: 4 }}>
+    <Container maxWidth={false} sx={{ px: 3, py: 4 }}>
       {/* 통계 카드 */}
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} md={3}>
@@ -301,19 +211,51 @@ function Dashboard() {
         </Grid>
       </Grid>
 
-      {/* 차트 행 */}
+      {/* 필터 */}
+      <Paper sx={{ p: 3, mb: 4 }}>
+        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
+          <DateRangeFilter
+            startDate={startDate}
+            endDate={endDate}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+          />
+          <TypeFilter
+            value={noticeType}
+            onChange={(e) => setNoticeType(e.target.value)}
+          />
+          <SearchBar
+            value={searchText}
+            onChange={setSearchText}
+            placeholder="공고명, 기관명 검색"
+          />
+          <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
+            <button
+              onClick={handleFilter}
+              style={{ padding: "8px 16px", cursor: "pointer" }}
+            >
+              검색
+            </button>
+            <button
+              onClick={handleReset}
+              style={{ padding: "8px 16px", cursor: "pointer" }}
+            >
+              초기화
+            </button>
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* 차트 */}
       <Grid container spacing={3} mb={4}>
-        {/* 일별 라인 차트 */}
         <Grid item xs={12} md={8}>
           <Paper sx={{ p: 3, height: 400 }}>
-            <Line data={dailyChartData} options={dailyChartOptions} />
+            <DailyChart data={dailyStats} />
           </Paper>
         </Grid>
-
-        {/* 유형별 파이 차트 */}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, height: 400 }}>
-            <Pie data={typeChartData} options={pieChartOptions} />
+            <TypeChart data={typeStats} />
           </Paper>
         </Grid>
       </Grid>
@@ -322,83 +264,27 @@ function Dashboard() {
       <Grid container spacing={3} mb={4}>
         <Grid item xs={12}>
           <Paper sx={{ p: 3, height: 500 }}>
-            <Bar data={agencyChartData} options={barChartOptions} />
+            <AgencyChart data={topAgencies} />
           </Paper>
         </Grid>
       </Grid>
 
       {/* TOP 5 기관 테이블 */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          발주 TOP 5 기관
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>순위</TableCell>
-                <TableCell>기관명</TableCell>
-                <TableCell align="right">공고 건수</TableCell>
-                <TableCell align="right">총 예산</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {topAgencies.slice(0, 5).map((agency, index) => (
-                <TableRow key={index}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{agency.agency}</TableCell>
-                  <TableCell align="right">
-                    {agency.count.toLocaleString()}건
-                  </TableCell>
-                  <TableCell align="right">
-                    {formatAmount(agency.total_budget)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+      <Grid container spacing={3} mb={4}>
+        <Grid item xs={12}>
+          <TopAgenciesTable
+            agencies={topAgencies}
+            formatAmount={formatAmount}
+          />
+        </Grid>
+      </Grid>
 
       {/* 최근 입찰공고 */}
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h5" gutterBottom>
-          최근 입찰공고
-        </Typography>
-        <Box>
-          {recentBiddings.length === 0 ? (
-            <Typography color="text.secondary">데이터가 없습니다.</Typography>
-          ) : (
-            recentBiddings.map((bidding, index) => (
-              <Box
-                key={index}
-                sx={{
-                  py: 2,
-                  borderBottom:
-                    index < recentBiddings.length - 1
-                      ? "1px solid #eee"
-                      : "none",
-                }}
-              >
-                <Typography variant="subtitle1" fontWeight="bold">
-                  {bidding.title}
-                </Typography>
-                <Box display="flex" gap={2} mt={1}>
-                  <Typography variant="body2" color="text.secondary">
-                    {bidding.notice_type || "-"}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {bidding.ordering_agency}
-                  </Typography>
-                  <Typography variant="body2" color="primary">
-                    {formatAmount(bidding.budget_amount)}
-                  </Typography>
-                </Box>
-              </Box>
-            ))
-          )}
-        </Box>
-      </Paper>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <BiddingsList biddings={recentBiddings} formatAmount={formatAmount} />
+        </Grid>
+      </Grid>
     </Container>
   );
 }
