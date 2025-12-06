@@ -1,11 +1,5 @@
 import { useState, useEffect } from "react";
-import { Container, Grid, Paper, Box, CircularProgress } from "@mui/material";
-import {
-  Assessment as AssessmentIcon,
-  Gavel as GavelIcon,
-  Description as DescriptionIcon,
-  TrendingUp as TrendingUpIcon,
-} from "@mui/icons-material";
+import { Box, Grid, Paper, CircularProgress, Button } from "@mui/material";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,7 +24,6 @@ import {
 } from "../services/api";
 
 // Components
-import StatCard from "../components/StatCard";
 import DateRangeFilter from "../components/filters/DateRangeFilter";
 import TypeFilter from "../components/filters/TypeFilter";
 import SearchBar from "../components/filters/SearchBar";
@@ -70,12 +63,6 @@ function Dashboard() {
 
   // State
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalBiddings: 0,
-    totalAwards: 0,
-    totalOrderPlans: 0,
-    totalBudget: 0,
-  });
   const [recentBiddings, setRecentBiddings] = useState([]);
   const [topAgencies, setTopAgencies] = useState([]);
   const [dailyStats, setDailyStats] = useState([]);
@@ -96,17 +83,11 @@ function Dashboard() {
     try {
       setLoading(true);
 
-      // 통계
-      const statsData = await getStatisticsSummary();
-      setStats({
-        totalBiddings: statsData.total_biddings || 0,
-        totalAwards: statsData.total_awards || 0,
-        totalOrderPlans: statsData.total_order_plans || 0,
-        totalBudget: statsData.total_budget || 0,
-      });
-
       // 최근 입찰공고
-      const biddingsData = await getBiddings({ limit: 10 });
+      const biddingsData = await getBiddings({
+        limit: 20,
+        skip: 0,
+      });
       if (biddingsData.items) {
         setRecentBiddings(biddingsData.items);
       }
@@ -134,12 +115,17 @@ function Dashboard() {
     try {
       setLoading(true);
       const params = {
-        limit: 10,
-        notice_type: noticeType,
-        search: searchText,
+        limit: 20,
+        skip: 0,
+        notice_type: noticeType || undefined,
+        search: searchText || undefined,
       };
 
+      console.log("검색 파라미터:", params);
+
       const biddingsData = await getBiddings(params);
+      console.log("검색 결과:", biddingsData);
+
       if (biddingsData.items) {
         setRecentBiddings(biddingsData.items);
       }
@@ -173,46 +159,9 @@ function Dashboard() {
   }
 
   return (
-    <Container maxWidth={false} sx={{ px: 3, py: 4 }}>
-      {/* 통계 카드 */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="총 입찰공고"
-            value={stats.totalBiddings}
-            icon={DescriptionIcon}
-            color="#1976d2"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="총 낙찰정보"
-            value={stats.totalAwards}
-            icon={GavelIcon}
-            color="#2e7d32"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="총 발주계획"
-            value={stats.totalOrderPlans}
-            icon={AssessmentIcon}
-            color="#ed6c02"
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatCard
-            title="총 예산"
-            value={formatAmount(stats.totalBudget)}
-            icon={TrendingUpIcon}
-            color="#9c27b0"
-            suffix=""
-          />
-        </Grid>
-      </Grid>
-
+    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "#f5f5f5", p: 3 }}>
       {/* 필터 */}
-      <Paper sx={{ p: 3, mb: 4 }}>
+      <Paper sx={{ p: 3, mb: 3 }}>
         <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
           <DateRangeFilter
             startDate={startDate}
@@ -230,30 +179,24 @@ function Dashboard() {
             placeholder="공고명, 기관명 검색"
           />
           <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
-            <button
-              onClick={handleFilter}
-              style={{ padding: "8px 16px", cursor: "pointer" }}
-            >
+            <Button variant="contained" onClick={handleFilter}>
               검색
-            </button>
-            <button
-              onClick={handleReset}
-              style={{ padding: "8px 16px", cursor: "pointer" }}
-            >
+            </Button>
+            <Button variant="outlined" onClick={handleReset}>
               초기화
-            </button>
+            </Button>
           </Box>
         </Box>
       </Paper>
 
       {/* 차트 */}
-      <Grid container spacing={3} mb={4}>
-        <Grid item xs={12} md={8}>
+      <Grid container spacing={3} mb={3}>
+        <Grid item xs={12} lg={8}>
           <Paper sx={{ p: 3, height: 400 }}>
             <DailyChart data={dailyStats} />
           </Paper>
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} lg={4}>
           <Paper sx={{ p: 3, height: 400 }}>
             <TypeChart data={typeStats} />
           </Paper>
@@ -261,7 +204,7 @@ function Dashboard() {
       </Grid>
 
       {/* TOP 기관 바 차트 */}
-      <Grid container spacing={3} mb={4}>
+      <Grid container spacing={3} mb={3}>
         <Grid item xs={12}>
           <Paper sx={{ p: 3, height: 500 }}>
             <AgencyChart data={topAgencies} />
@@ -270,7 +213,7 @@ function Dashboard() {
       </Grid>
 
       {/* TOP 5 기관 테이블 */}
-      <Grid container spacing={3} mb={4}>
+      <Grid container spacing={3} mb={3}>
         <Grid item xs={12}>
           <TopAgenciesTable
             agencies={topAgencies}
@@ -285,7 +228,7 @@ function Dashboard() {
           <BiddingsList biddings={recentBiddings} formatAmount={formatAmount} />
         </Grid>
       </Grid>
-    </Container>
+    </Box>
   );
 }
 
