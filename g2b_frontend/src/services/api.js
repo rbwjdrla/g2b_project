@@ -32,26 +32,26 @@ export const getBiddingDetail = async (noticeNumber) => {
 };
 
 // ==================== 낙찰정보 ====================
-//export const getAwards = async (params = {}) => {
-//  try {
-//    const response = await api.get('/awards', { params });
-//    return response.data;
-//  } catch (error) {
-//    console.error('낙찰정보 조회 에러:', error);
-//    throw error;
-//  }
-//};
+export const getAwards = async (params = {}) => {
+  try {
+    const response = await api.get('/awards', { params });
+    return response.data;
+  } catch (error) {
+    console.error('낙찰정보 조회 에러:', error);
+    throw error;
+  }
+};
 
 // ==================== 발주계획 ====================
-//export const getOrderPlans = async (params = {}) => {
-//  try {
-//    const response = await api.get('/orderplans', { params });  // ← 수정!
-//    return response.data;
-//  } catch (error) {
-//    console.error('발주계획 조회 에러:', error);
-//    throw error;
-//  }
-//};
+export const getOrderPlans = async (params = {}) => {
+  try {
+    const response = await api.get('/orderplans', { params });  // ← 수정!
+    return response.data;
+  } catch (error) {
+    console.error('발주계획 조회 에러:', error);
+    throw error;
+  }
+};
 
 // ==================== 통계 ====================
 export const getStatisticsSummary = async () => {

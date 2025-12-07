@@ -32,8 +32,7 @@ def get_awards(
         query = query.filter(Award.award_company_name.contains(search))
     
     # 최신순
-    query = query.order_by(Award.opening_date.desc())
-    
+    query = query.order_by(Award.created_at.desc())
     total = query.count()
     items = query.offset(skip).limit(limit).all()
     
