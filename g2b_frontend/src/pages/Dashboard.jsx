@@ -281,62 +281,46 @@ const Dashboard = () => {
           <Typography variant="h6" gutterBottom>
             통계
           </Typography>
+
+          {/* 상단: 라인 차트 + 파이 차트 */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: 2,
-              mb: 2,
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              gap: 3,
+              mb: 3,
             }}
           >
-            {dailyData.length > 0 && <DailyChart data={dailyData} />}
-            {typeData.length > 0 && <TypeChart data={typeData} />}
+            {dailyData.length > 0 && (
+              <Box sx={{ height: 400 }}>
+                <DailyChart data={dailyData} />
+              </Box>
+            )}
+            {typeData.length > 0 && (
+              <Box sx={{ height: 400 }}>
+                <TypeChart data={typeData} />
+              </Box>
+            )}
           </Box>
+
+          {/* 하단: 바 차트 + 테이블 */}
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
-              gap: 2,
+              gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
+              gap: 3,
             }}
           >
-            {agencyData.length > 0 && <AgencyChart data={agencyData} />}
+            {agencyData.length > 0 && (
+              <Box sx={{ height: 500 }}>
+                <AgencyChart data={agencyData} />
+              </Box>
+            )}
             {agencyData.length > 0 && (
               <TopAgenciesTable data={agencyData} formatAmount={formatAmount} />
             )}
           </Box>
         </Box>
-      )}
-
-      {/* 탭 */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-        <Tabs value={currentTab} onChange={handleTabChange}>
-          <Tab label="입찰공고" />
-          <Tab label="낙찰정보" />
-          <Tab label="발주계획" />
-        </Tabs>
-      </Box>
-
-      {/* 탭 패널 */}
-      {currentTab === 0 && (
-        <>
-          <BiddingsList
-            biddings={biddings}
-            formatAmount={formatAmount}
-            total={biddings.length}
-            page={page}
-            limit={20}
-            onPageChange={handlePageChange}
-            onItemClick={handleItemClick}
-          />
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </Box>
-        </>
       )}
 
       {currentTab === 1 && (

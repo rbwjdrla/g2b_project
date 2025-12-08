@@ -24,7 +24,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
           <Box display="flex" alignItems="center" gap={2}>
             <Typography variant="h6">낙찰정보 상세</Typography>
             <Chip
-              label={award.notice_type || "미분류"}
+              label={award.notice_type || "용역"}
               size="small"
               color="primary"
             />
@@ -37,8 +37,12 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
 
       <DialogContent dividers>
         <Box sx={{ py: 2 }}>
-          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: "bold" }}>
-            {award.title}
+          <Typography
+            variant="h6"
+            gutterBottom
+            sx={{ mb: 3, fontWeight: "bold" }}
+          >
+            {award.title || award.notice_name || "제목 없음"}
           </Typography>
 
           <Grid container spacing={3}>
@@ -47,7 +51,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
                 공고번호
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {award.notice_number || '-'}
+                {award.notice_number || "-"}
               </Typography>
             </Grid>
 
@@ -55,8 +59,12 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
               <Typography variant="caption" color="text.secondary">
                 낙찰업체
               </Typography>
-              <Typography variant="body1" color="primary" sx={{ fontWeight: 'bold' }}>
-                {award.contractor_name || '-'}
+              <Typography
+                variant="body1"
+                color="primary"
+                sx={{ fontWeight: "bold" }}
+              >
+                {award.contractor_name || award.award_company_name || "-"}
               </Typography>
             </Grid>
 
@@ -68,8 +76,12 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
               <Typography variant="caption" color="text.secondary">
                 낙찰금액
               </Typography>
-              <Typography variant="h6" color="primary" sx={{ fontWeight: "bold" }}>
-                {formatAmount(award.contract_amount)}
+              <Typography
+                variant="h6"
+                color="primary"
+                sx={{ fontWeight: "bold" }}
+              >
+                {formatAmount(award.contract_amount || award.award_amount)}
               </Typography>
             </Grid>
 
@@ -78,7 +90,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
                 낙찰률
               </Typography>
               <Typography variant="body1">
-                {award.winning_rate ? `${award.winning_rate}%` : '-'}
+                {award.winning_rate ? `${award.winning_rate}%` : "-"}
               </Typography>
             </Grid>
 
@@ -88,10 +100,14 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
 
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
-                계약일자
+                낙찰일자
               </Typography>
               <Typography variant="body1">
-                {award.contract_date?.substring(0, 10) || '-'}
+                {award.contract_date || award.award_date
+                  ? new Date(
+                      award.contract_date || award.award_date
+                    ).toLocaleDateString("ko-KR")
+                  : "-"}
               </Typography>
             </Grid>
 
@@ -100,7 +116,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
                 발주기관
               </Typography>
               <Typography variant="body1">
-                {award.ordering_agency || '-'}
+                {award.ordering_agency || "-"}
               </Typography>
             </Grid>
           </Grid>
