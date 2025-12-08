@@ -42,19 +42,21 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
             gutterBottom
             sx={{ mb: 3, fontWeight: "bold" }}
           >
-            {award.title || award.notice_name || "제목 없음"}
+            {award.award_company_name || "업체명 없음"}
           </Typography>
 
           <Grid container spacing={3}>
+            {/* 공고번호 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
                 공고번호
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {award.notice_number || "-"}
+                {award.bid_ntce_no || "-"}
               </Typography>
             </Grid>
 
+            {/* 낙찰업체 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
                 낙찰업체
@@ -64,7 +66,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
                 color="primary"
                 sx={{ fontWeight: "bold" }}
               >
-                {award.contractor_name || award.award_company_name || "-"}
+                {award.award_company_name || "-"}
               </Typography>
             </Grid>
 
@@ -72,6 +74,7 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
               <Divider />
             </Grid>
 
+            {/* 낙찰금액 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
                 낙찰금액
@@ -81,16 +84,17 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
                 color="primary"
                 sx={{ fontWeight: "bold" }}
               >
-                {formatAmount(award.contract_amount || award.award_amount)}
+                {formatAmount(award.award_amount)}
               </Typography>
             </Grid>
 
+            {/* 낙찰률 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
                 낙찰률
               </Typography>
               <Typography variant="body1">
-                {award.winning_rate ? `${award.winning_rate}%` : "-"}
+                {award.award_rate ? `${award.award_rate}%` : "-"}
               </Typography>
             </Grid>
 
@@ -98,26 +102,46 @@ function AwardDetailModal({ open, onClose, award, formatAmount }) {
               <Divider />
             </Grid>
 
+            {/* 대표자명 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
-                낙찰일자
+                대표자명
               </Typography>
               <Typography variant="body1">
-                {award.contract_date || award.award_date
-                  ? new Date(
-                      award.contract_date || award.award_date
-                    ).toLocaleDateString("ko-KR")
-                  : "-"}
+                {award.award_ceo_name || "-"}
               </Typography>
             </Grid>
 
+            {/* 사업자번호 */}
             <Grid item xs={12} sm={6}>
               <Typography variant="caption" color="text.secondary">
-                발주기관
+                사업자번호
               </Typography>
               <Typography variant="body1">
-                {award.ordering_agency || "-"}
+                {award.award_business_no || "-"}
               </Typography>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Divider />
+            </Grid>
+
+            {/* 발주기관코드 */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="caption" color="text.secondary">
+                발주기관코드
+              </Typography>
+              <Typography variant="body1">
+                {award.ntce_instt_cd || "-"}
+              </Typography>
+            </Grid>
+
+            {/* 수요기관코드 */}
+            <Grid item xs={12} sm={6}>
+              <Typography variant="caption" color="text.secondary">
+                수요기관코드
+              </Typography>
+              <Typography variant="body1">{award.dminstt_cd || "-"}</Typography>
             </Grid>
           </Grid>
         </Box>
