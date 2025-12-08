@@ -1,3 +1,4 @@
+// src/components/BiddingDetailModal.jsx
 import {
   Dialog,
   DialogTitle,
@@ -18,7 +19,6 @@ function BiddingDetailModal({ open, onClose, bidding, formatAmount }) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      {/* 헤더 */}
       <DialogTitle>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box display="flex" alignItems="center" gap={2}>
@@ -41,10 +41,8 @@ function BiddingDetailModal({ open, onClose, bidding, formatAmount }) {
         </Box>
       </DialogTitle>
 
-      {/* 내용 */}
       <DialogContent dividers>
         <Box sx={{ py: 2 }}>
-          {/* 공고명 */}
           <Typography
             variant="h6"
             gutterBottom
@@ -60,7 +58,7 @@ function BiddingDetailModal({ open, onClose, bidding, formatAmount }) {
                 공고번호
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                {bidding.notice_number}
+                {bidding.notice_number || "-"}
               </Typography>
             </Grid>
 
@@ -70,8 +68,10 @@ function BiddingDetailModal({ open, onClose, bidding, formatAmount }) {
                 공고일시
               </Typography>
               <Typography variant="body1">
-                {bidding.notice_date
-                  ? new Date(bidding.notice_date).toLocaleString("ko-KR")
+                {bidding.notice_datetime || bidding.notice_date
+                  ? new Date(
+                      bidding.notice_datetime || bidding.notice_date
+                    ).toLocaleString("ko-KR")
                   : "-"}
               </Typography>
             </Grid>
@@ -183,7 +183,6 @@ function BiddingDetailModal({ open, onClose, bidding, formatAmount }) {
         </Box>
       </DialogContent>
 
-      {/* 하단 버튼 */}
       <DialogActions sx={{ px: 3, py: 2 }}>
         <Button onClick={onClose} variant="contained" size="large">
           닫기
