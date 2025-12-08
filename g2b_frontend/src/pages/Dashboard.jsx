@@ -8,6 +8,7 @@ import {
   Tab,
   Pagination,
   CircularProgress,
+  Button,
 } from "@mui/material";
 import {
   Chart as ChartJS,
@@ -223,6 +224,20 @@ const Dashboard = () => {
     }
   };
 
+  // 추가됨: 필터 초기화 함수
+  const handleReset = () => {
+    setFilters({
+      startDate: null,
+      endDate: null,
+      noticeType: "",
+      search: "",
+    });
+    setPage(1);
+    setAwardsPage(1);
+    setPlansPage(1);
+    loadData();
+  };
+
   const handleItemClick = (item) => {
     setSelectedItem(item);
     setModalOpen(true);
@@ -252,28 +267,52 @@ const Dashboard = () => {
         G2B 입찰 정보 대시보드
       </Typography>
 
-      {/* 필터 */}
-      <Box sx={{ mb: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
-        <DateRangeFilter
-          startDate={filters.startDate}
-          endDate={filters.endDate}
-          onStartDateChange={(date) =>
-            setFilters({ ...filters, startDate: date })
-          }
-          onEndDateChange={(date) => setFilters({ ...filters, endDate: date })}
-        />
-        <TypeFilter
-          value={filters.noticeType}
-          onChange={(type) => setFilters({ ...filters, noticeType: type })}
-        />
-        <SearchBar
-          value={filters.search}
-          onChange={(search) => setFilters({ ...filters, search })}
-          onSearch={handleFilter}
-        />
+      {/* 필터 - 검색/초기화 버튼 추가됨 */}
+      <Box sx={{ mb: 3 }}>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <DateRangeFilter
+            startDate={filters.startDate}
+            endDate={filters.endDate}
+            onStartDateChange={(date) =>
+              setFilters({ ...filters, startDate: date })
+            }
+            onEndDateChange={(date) =>
+              setFilters({ ...filters, endDate: date })
+            }
+          />
+          <TypeFilter
+            value={filters.noticeType}
+            onChange={(type) => setFilters({ ...filters, noticeType: type })}
+          />
+          <SearchBar
+            value={filters.search}
+            onChange={(search) => setFilters({ ...filters, search })}
+            onSearch={handleFilter}
+          />
+          {/* 추가됨: 검색 버튼 */}
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleFilter}
+            sx={{ height: 40 }}
+          >
+            검색
+          </Button>
+          {/* 추가됨: 초기화 버튼 */}
+          <Button variant="outlined" onClick={handleReset} sx={{ height: 40 }}>
+            초기화
+          </Button>
+        </Box>
       </Box>
 
-      {/* 통계 차트 */}
+      {/* 통계 차트 - 레이아웃 개선됨 */}
       {(dailyData.length > 0 ||
         typeData.length > 0 ||
         agencyData.length > 0) && (
@@ -282,7 +321,7 @@ const Dashboard = () => {
             통계
           </Typography>
 
-          {/* 상단: 라인 차트 + 파이 차트 */}
+          {/* 수정됨: 상단 라인차트 + 파이차트 */}
           <Box
             sx={{
               display: "grid",
@@ -303,7 +342,7 @@ const Dashboard = () => {
             )}
           </Box>
 
-          {/* 하단: 바 차트 + 테이블 */}
+          {/* 수정됨: 하단 바차트 + 테이블 */}
           <Box
             sx={{
               display: "grid",
@@ -321,6 +360,38 @@ const Dashboard = () => {
             )}
           </Box>
         </Box>
+      )}
+
+      {/* 탭 */}
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+        <Tabs value={currentTab} onChange={handleTabChange}>
+          <Tab label="입찰공고" />
+          <Tab label="낙찰정보" />
+          <Tab label="발주계획" />
+        </Tabs>
+      </Box>
+
+      {/* 탭 패널 */}
+      {currentTab === 0 && (
+        <>
+          <BiddingsList
+            biddings={biddings}
+            formatAmount={formatAmount}
+            total={biddings.length}
+            page={page}
+            limit={20}
+            onPageChange={handlePageChange}
+            onItemClick={handleItemClick}
+          />
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={totalPages}
+              page={page}
+              onChange={handlePageChange}
+              color="primary"
+            />
+          </Box>
+        </>
       )}
 
       {currentTab === 1 && (
@@ -367,7 +438,7 @@ const Dashboard = () => {
         </>
       )}
 
-      {/* 상세보기 모달 - 탭별로 다른 모달 */}
+      {/* 추가됨: 탭별로 다른 모달 사용 */}
       {currentTab === 0 && (
         <BiddingDetailModal
           open={modalOpen}
