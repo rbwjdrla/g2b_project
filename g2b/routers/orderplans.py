@@ -22,9 +22,9 @@ def get_orderplans(
     query = db.query(OrderPlan)
     
     if search:
-        query = query.filter(OrderPlan.business_name.contains(search))
+        query = query.filter(OrderPlan.biz_nm.contains(search))
     
-    query = query.order_by(OrderPlan.announce_date.desc())
+    query = query.order_by(OrderPlan.ntice_dt.desc())
     
     total = query.count()
     items = query.offset(skip).limit(limit).all()
