@@ -58,20 +58,35 @@ class AwardListResponse(BaseModel):
 # ==================== 발주계획 ====================
 class OrderPlanResponse(BaseModel):
     id: int
-    announce_number: str
-    demand_org_name: Optional[str] = None
-    public_org_name: Optional[str] = None
-    business_name: Optional[str] = None
-    total_predict_price: Optional[int] = None
-    announce_date: Optional[datetime] = None
-    reference_date: Optional[datetime] = None
-    demand_class_name: Optional[str] = None
+    order_plan_unty_no: str
+    biz_nm: Optional[str] = None
+    order_instt_nm: Optional[str] = None
+    dept_nm: Optional[str] = None
+    ofcl_nm: Optional[str] = None
+    tel_no: Optional[str] = None
+    prcrmnt_methd: Optional[str] = None
+    cntrct_mthd_nm: Optional[str] = None
+    sum_order_amt: Optional[int] = None
+    sum_order_dol_amt: Optional[str] = None
+    qty_cntnts: Optional[str] = None
+    unit: Optional[str] = None
+    prdct_clsfc_no: Optional[str] = None
+    dtil_prdct_clsfc_no: Optional[str] = None
+    prdct_clsfc_no_nm: Optional[str] = None
+    dtil_prdct_clsfc_no_nm: Optional[str] = None
+    usg_cntnts: Optional[str] = None
+    spec_cntnts: Optional[str] = None
+    rmrk_cntnts: Optional[str] = None
+    order_year: Optional[str] = None
+    order_mnth: Optional[str] = None
+    ntice_dt: Optional[datetime] = None
+    chg_dt: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
-
+        
 class OrderPlanListResponse(BaseModel):
     total: int
     items: list[OrderPlanResponse]

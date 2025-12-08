@@ -6,6 +6,8 @@ import {
   CircularProgress,
   Button,
   Typography,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Chart as ChartJS,
@@ -24,6 +26,8 @@ import dayjs from "dayjs";
 // API
 import {
   getBiddings,
+  getAwards,
+  getOrderPlans,
   getDailyStatistics,
   getTopAgencies,
   getStatisticsByType,
@@ -38,7 +42,10 @@ import TypeChart from "../components/charts/TypeChart";
 import AgencyChart from "../components/charts/AgencyChart";
 import TopAgenciesTable from "../components/tables/TopAgenciesTable";
 import BiddingsList from "../components/tables/BiddingsList";
+import AwardsList from "../components/tables/AwardsList";
+import OrderPlansList from "../components/tables/OrderPlansList";
 import BiddingDetailModal from "../components/BiddingDetailModal";
+import TabPanel from "../components/TabPanel";
 
 // Chart.js 등록
 ChartJS.register(
@@ -70,21 +77,34 @@ function Dashboard() {
 
   // State
   const [loading, setLoading] = useState(true);
-  const [recentBiddings, setRecentBiddings] = useState([]);
   const [topAgencies, setTopAgencies] = useState([]);
   const [dailyStats, setDailyStats] = useState([]);
   const [typeStats, setTypeStats] = useState([]);
+
+  // 탭 State
+  const [currentTab, setCurrentTab] = useState(0);
 
   // 필터 State
   const [startDate, setStartDate] = useState(dayjs().subtract(30, "day"));
   const [endDate, setEndDate] = useState(dayjs());
   const [noticeType, setNoticeType] = useState("");
   const [searchText, setSearchText] = useState("");
-
-  // 페이징 State
-  const [page, setPage] = useState(1);
   const [limit] = useState(20);
+
+  // 입찰공고 State
+  const [recentBiddings, setRecentBiddings] = useState([]);
+  const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+
+  // 낙찰정보 State
+  const [awards, setAwards] = useState([]);
+  const [awardsPage, setAwardsPage] = useState(1);
+  const [awardsTotal, setAwardsTotal] = useState(0);
+
+  // 발주계획 State
+  const [orderPlans, setOrderPlans] = useState([]);
+  const [plansPage, setPlansPage] = useState(1);
+  const [plansTotal, setPlansTotal] = useState(0);
 
   // 상세 모달 State
   const [selectedBidding, setSelectedBidding] = useState(null);
@@ -93,13 +113,13 @@ function Dashboard() {
   // 데이터 로드
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // 빈 배열로 1번만 실행
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // 최근 입찰공고
+      // 입찰공고
       const biddingsData = await getBiddings({
         limit: limit,
         skip: (page - 1) * limit,
@@ -107,6 +127,26 @@ function Dashboard() {
       if (biddingsData) {
         setRecentBiddings(biddingsData.items || []);
         setTotal(biddingsData.total || 0);
+      }
+
+      // 낙찰정보
+      const awardsData = await getAwards({
+        limit: limit,
+        skip: (awardsPage - 1) * limit,
+      });
+      if (awardsData) {
+        setAwards(awardsData.items || []);
+        setAwardsTotal(awardsData.total || 0);
+      }
+
+      // 발주계획
+      const plansData = await getOrderPlans({
+        limit: limit,
+        skip: (plansPage - 1) * limit,
+      });
+      if (plansData) {
+        setOrderPlans(plansData.items || []);
+        setPlansTotal(plansData.total || 0);
       }
 
       // TOP 기관
@@ -127,9 +167,17 @@ function Dashboard() {
     }
   };
 
+  // 탭 변경
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+  };
+
   // 필터 적용
   const handleFilter = async () => {
-    setPage(1); // 페이지 초기화
+    setPage(1);
+    setAwardsPage(1);
+    setPlansPage(1);
+
     try {
       setLoading(true);
       const params = {
@@ -139,14 +187,29 @@ function Dashboard() {
         search: searchText || undefined,
       };
 
-      console.log("검색 파라미터:", params);
-
-      const biddingsData = await getBiddings(params);
-      console.log("검색 결과:", biddingsData);
-
-      if (biddingsData) {
-        setRecentBiddings(biddingsData.items || []);
-        setTotal(biddingsData.total || 0);
+      // 현재 탭에 따라 데이터 로드
+      if (currentTab === 0) {
+        const biddingsData = await getBiddings(params);
+        if (biddingsData) {
+          setRecentBiddings(biddingsData.items || []);
+          setTotal(biddingsData.total || 0);
+        }
+      } else if (currentTab === 1) {
+        const awardsData = await getAwards(params);
+        if (awardsData) {
+          setAwards(awardsData.items || []);
+          setAwardsTotal(awardsData.total || 0);
+        }
+      } else if (currentTab === 2) {
+        const plansData = await getOrderPlans({
+          limit: limit,
+          skip: 0,
+          search: searchText || undefined,
+        });
+        if (plansData) {
+          setOrderPlans(plansData.items || []);
+          setPlansTotal(plansData.total || 0);
+        }
       }
     } catch (error) {
       console.error("필터 에러:", error);
@@ -162,10 +225,12 @@ function Dashboard() {
     setNoticeType("");
     setSearchText("");
     setPage(1);
+    setAwardsPage(1);
+    setPlansPage(1);
     loadData();
   };
 
-  // 페이지 변경
+  // 입찰공고 페이지 변경
   const handlePageChange = async (newPage) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -191,9 +256,56 @@ function Dashboard() {
     }
   };
 
+  // 낙찰정보 페이지 변경
+  const handleAwardsPageChange = async (newPage) => {
+    setAwardsPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    try {
+      setLoading(true);
+      const awardsData = await getAwards({
+        limit: limit,
+        skip: (newPage - 1) * limit,
+        notice_type: noticeType || undefined,
+        search: searchText || undefined,
+      });
+      if (awardsData) {
+        setAwards(awardsData.items || []);
+        setAwardsTotal(awardsData.total || 0);
+      }
+    } catch (error) {
+      console.error("페이지 변경 에러:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 발주계획 페이지 변경
+  const handlePlansPageChange = async (newPage) => {
+    setPlansPage(newPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    try {
+      setLoading(true);
+      const plansData = await getOrderPlans({
+        limit: limit,
+        skip: (newPage - 1) * limit,
+        search: searchText || undefined,
+      });
+      if (plansData) {
+        setOrderPlans(plansData.items || []);
+        setPlansTotal(plansData.total || 0);
+      }
+    } catch (error) {
+      console.error("페이지 변경 에러:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 상세 모달
-  const handleItemClick = (bidding) => {
-    setSelectedBidding(bidding);
+  const handleItemClick = (item) => {
+    setSelectedBidding(item);
     setModalOpen(true);
   };
 
@@ -233,7 +345,7 @@ function Dashboard() {
           <SearchBar
             value={searchText}
             onChange={setSearchText}
-            placeholder="공고명, 기관명 검색"
+            placeholder="공고명, 기관명, 업체명 검색"
           />
           <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
             <Button variant="contained" onClick={handleFilter}>
@@ -246,19 +358,54 @@ function Dashboard() {
         </Box>
       </Paper>
 
-      {/* 메인 레이아웃: 왼쪽 입찰공고, 오른쪽 통계 */}
+      {/* 탭 */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={currentTab} onChange={handleTabChange}>
+          <Tab label="입찰공고" />
+          <Tab label="낙찰정보" />
+          <Tab label="발주계획" />
+        </Tabs>
+      </Paper>
+
+      {/* 메인 레이아웃: 왼쪽 목록, 오른쪽 통계 */}
       <Grid container spacing={3}>
-        {/* 왼쪽: 입찰공고 목록 */}
+        {/* 왼쪽: 탭별 목록 */}
         <Grid item xs={12} lg={7}>
-          <BiddingsList
-            biddings={recentBiddings}
-            formatAmount={formatAmount}
-            total={total}
-            page={page}
-            limit={limit}
-            onPageChange={handlePageChange}
-            onItemClick={handleItemClick}
-          />
+          <TabPanel value={currentTab} index={0}>
+            <BiddingsList
+              biddings={recentBiddings}
+              formatAmount={formatAmount}
+              total={total}
+              page={page}
+              limit={limit}
+              onPageChange={handlePageChange}
+              onItemClick={handleItemClick}
+            />
+          </TabPanel>
+
+          <TabPanel value={currentTab} index={1}>
+            <AwardsList
+              awards={awards}
+              formatAmount={formatAmount}
+              total={awardsTotal}
+              page={awardsPage}
+              limit={limit}
+              onPageChange={handleAwardsPageChange}
+              onItemClick={handleItemClick}
+            />
+          </TabPanel>
+
+          <TabPanel value={currentTab} index={2}>
+            <OrderPlansList
+              plans={orderPlans}
+              formatAmount={formatAmount}
+              total={plansTotal}
+              page={plansPage}
+              limit={limit}
+              onPageChange={handlePlansPageChange}
+              onItemClick={handleItemClick}
+            />
+          </TabPanel>
         </Grid>
 
         {/* 오른쪽: 통계 */}
