@@ -9,6 +9,8 @@ import {
   Pagination,
   CircularProgress,
   Button,
+  Grid,
+  Paper,
 } from "@mui/material";
 import {
   Chart as ChartJS,
@@ -35,10 +37,7 @@ import AwardDetailModal from "../components/AwardDetailModal";
 import OrderPlanDetailModal from "../components/OrderPlanDetailModal";
 import DailyChart from "../components/charts/DailyChart";
 import TypeChart from "../components/charts/TypeChart";
-import AgencyChart from "../components/charts/AgencyChart";
-import TopAgenciesTable from "../components/tables/TopAgenciesTable";
 
-// Chart.js 등록
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -56,27 +55,21 @@ const Dashboard = () => {
   const [currentTab, setCurrentTab] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  // 입찰공고 상태
   const [biddings, setBiddings] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
-  // 낙찰정보 상태
   const [awards, setAwards] = useState([]);
   const [awardsPage, setAwardsPage] = useState(1);
   const [awardsTotalPages, setAwardsTotalPages] = useState(0);
 
-  // 발주계획 상태
   const [orderPlans, setOrderPlans] = useState([]);
   const [plansPage, setPlansPage] = useState(1);
   const [plansTotalPages, setPlansTotalPages] = useState(0);
 
-  // 통계 데이터 상태
   const [dailyData, setDailyData] = useState([]);
   const [typeData, setTypeData] = useState([]);
-  const [agencyData, setAgencyData] = useState([]);
 
-  // 필터 상태
   const [filters, setFilters] = useState({
     startDate: null,
     endDate: null,
@@ -84,11 +77,9 @@ const Dashboard = () => {
     search: "",
   });
 
-  // 모달 상태
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  // 금액 포맷
   const formatAmount = (amount) => {
     if (!amount && amount !== 0) return "-";
     if (amount >= 1000000000000) {
@@ -102,7 +93,6 @@ const Dashboard = () => {
     }
   };
 
-  // 초기 데이터 로드
   useEffect(() => {
     loadData();
     loadStatistics();
@@ -119,29 +109,23 @@ const Dashboard = () => {
     }
   };
 
-  // 통계 데이터 로드
   const loadStatistics = async () => {
     try {
-      const [dailyRes, typeRes, agencyRes] = await Promise.all([
+      const [dailyRes, typeRes] = await Promise.all([
         fetch("/api/statistics/daily")
           .then((r) => r.json())
           .catch(() => []),
         fetch("/api/statistics/by-type")
           .then((r) => r.json())
           .catch(() => []),
-        fetch("/api/statistics/top-agencies")
-          .then((r) => r.json())
-          .catch(() => []),
       ]);
 
       setDailyData(dailyRes);
       setTypeData(typeRes);
-      setAgencyData(agencyRes);
     } catch (error) {
       console.error("통계 로드 실패:", error);
       setDailyData([]);
       setTypeData([]);
-      setAgencyData([]);
     }
   };
 
@@ -224,7 +208,6 @@ const Dashboard = () => {
     }
   };
 
-  // 추가됨: 필터 초기화 함수
   const handleReset = () => {
     setFilters({
       startDate: null,
@@ -267,7 +250,7 @@ const Dashboard = () => {
         G2B 입찰 정보 대시보드
       </Typography>
 
-      {/* 필터 - 검색/초기화 버튼 추가됨 */}
+      {/* 필터 */}
       <Box sx={{ mb: 3 }}>
         <Box
           sx={{
@@ -296,7 +279,6 @@ const Dashboard = () => {
             onChange={(search) => setFilters({ ...filters, search })}
             onSearch={handleFilter}
           />
-          {/* 추가됨: 검색 버튼 */}
           <Button
             variant="contained"
             color="primary"
@@ -305,140 +287,114 @@ const Dashboard = () => {
           >
             검색
           </Button>
-          {/* 추가됨: 초기화 버튼 */}
           <Button variant="outlined" onClick={handleReset} sx={{ height: 40 }}>
             초기화
           </Button>
         </Box>
       </Box>
 
-      {/* 통계 차트 - 레이아웃 개선됨 */}
-      {(dailyData.length > 0 ||
-        typeData.length > 0 ||
-        agencyData.length > 0) && (
-        <Box sx={{ mb: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            통계
-          </Typography>
+      {/* Grid 레이아웃: 왼쪽 메인 + 오른쪽 통계 */}
+      <Grid container spacing={3}>
+        {/* 왼쪽: 메인 콘텐츠 */}
+        <Grid item xs={12} lg={8}>
+          {/* 탭 */}
+          <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
+            <Tabs value={currentTab} onChange={handleTabChange}>
+              <Tab label="입찰공고" />
+              <Tab label="낙찰정보" />
+              <Tab label="발주계획" />
+            </Tabs>
+          </Box>
 
-          {/* 수정됨: 상단 라인차트 + 파이차트 */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
-              gap: 3,
-              mb: 3,
-            }}
-          >
+          {/* 탭 패널 */}
+          {currentTab === 0 && (
+            <>
+              <BiddingsList
+                biddings={biddings}
+                formatAmount={formatAmount}
+                total={biddings.length}
+                page={page}
+                limit={20}
+                onPageChange={handlePageChange}
+                onItemClick={handleItemClick}
+              />
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <Pagination
+                  count={totalPages}
+                  page={page}
+                  onChange={handlePageChange}
+                  color="primary"
+                />
+              </Box>
+            </>
+          )}
+
+          {currentTab === 1 && (
+            <>
+              <AwardsList
+                awards={awards}
+                formatAmount={formatAmount}
+                total={awards.length}
+                page={awardsPage}
+                limit={20}
+                onPageChange={handleAwardsPageChange}
+                onItemClick={handleItemClick}
+              />
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <Pagination
+                  count={awardsTotalPages}
+                  page={awardsPage}
+                  onChange={handleAwardsPageChange}
+                  color="primary"
+                />
+              </Box>
+            </>
+          )}
+
+          {currentTab === 2 && (
+            <>
+              <OrderPlansList
+                plans={orderPlans}
+                formatAmount={formatAmount}
+                total={orderPlans.length}
+                page={plansPage}
+                limit={20}
+                onPageChange={handlePlansPageChange}
+                onItemClick={handleItemClick}
+              />
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+                <Pagination
+                  count={plansTotalPages}
+                  page={plansPage}
+                  onChange={handlePlansPageChange}
+                  color="primary"
+                />
+              </Box>
+            </>
+          )}
+        </Grid>
+
+        {/* 오른쪽: 통계 패널 - 차트 2개만 */}
+        <Grid item xs={12} lg={4}>
+          <Box sx={{ position: "sticky", top: 20 }}>
+            {/* 최근 30일 입찰공고 추이 */}
             {dailyData.length > 0 && (
-              <Box sx={{ height: 400 }}>
+              <Paper sx={{ p: 2, mb: 3, height: 350 }}>
                 <DailyChart data={dailyData} />
-              </Box>
+              </Paper>
             )}
+
+            {/* 유형별 입찰공고 분포 */}
             {typeData.length > 0 && (
-              <Box sx={{ height: 400 }}>
+              <Paper sx={{ p: 2, mb: 3, height: 350 }}>
                 <TypeChart data={typeData} />
-              </Box>
+              </Paper>
             )}
           </Box>
+        </Grid>
+      </Grid>
 
-          {/* 수정됨: 하단 바차트 + 테이블 */}
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-              gap: 3,
-            }}
-          >
-            {agencyData.length > 0 && (
-              <Box sx={{ height: 500 }}>
-                <AgencyChart data={agencyData} />
-              </Box>
-            )}
-            {agencyData.length > 0 && (
-              <TopAgenciesTable data={agencyData} formatAmount={formatAmount} />
-            )}
-          </Box>
-        </Box>
-      )}
-
-      {/* 탭 */}
-      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
-        <Tabs value={currentTab} onChange={handleTabChange}>
-          <Tab label="입찰공고" />
-          <Tab label="낙찰정보" />
-          <Tab label="발주계획" />
-        </Tabs>
-      </Box>
-
-      {/* 탭 패널 */}
-      {currentTab === 0 && (
-        <>
-          <BiddingsList
-            biddings={biddings}
-            formatAmount={formatAmount}
-            total={biddings.length}
-            page={page}
-            limit={20}
-            onPageChange={handlePageChange}
-            onItemClick={handleItemClick}
-          />
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={totalPages}
-              page={page}
-              onChange={handlePageChange}
-              color="primary"
-            />
-          </Box>
-        </>
-      )}
-
-      {currentTab === 1 && (
-        <>
-          <AwardsList
-            awards={awards}
-            formatAmount={formatAmount}
-            total={awards.length}
-            page={awardsPage}
-            limit={20}
-            onPageChange={handleAwardsPageChange}
-            onItemClick={handleItemClick}
-          />
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={awardsTotalPages}
-              page={awardsPage}
-              onChange={handleAwardsPageChange}
-              color="primary"
-            />
-          </Box>
-        </>
-      )}
-
-      {currentTab === 2 && (
-        <>
-          <OrderPlansList
-            plans={orderPlans}
-            formatAmount={formatAmount}
-            total={orderPlans.length}
-            page={plansPage}
-            limit={20}
-            onPageChange={handlePlansPageChange}
-            onItemClick={handleItemClick}
-          />
-          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
-            <Pagination
-              count={plansTotalPages}
-              page={plansPage}
-              onChange={handlePlansPageChange}
-              color="primary"
-            />
-          </Box>
-        </>
-      )}
-
-      {/* 추가됨: 탭별로 다른 모달 사용 */}
+      {/* 모달 */}
       {currentTab === 0 && (
         <BiddingDetailModal
           open={modalOpen}
