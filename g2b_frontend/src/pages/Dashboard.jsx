@@ -1,66 +1,65 @@
-import { useState, useEffect } from "react";
+// src/pages/Dashboard.jsx
+import React, { useState, useEffect } from "react";
 import {
-  Box,
-  Grid,
-  Paper,
-  CircularProgress,
-  Button,
+  Container,
   Typography,
+  Box,
   Tabs,
   Tab,
+  Pagination,
+  CircularProgress,
 } from "@mui/material";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import dayjs from "dayjs";
-
-// API
-import {
-  getBiddings,
-  getAwards,
-  getOrderPlans,
-  getDailyStatistics,
-  getTopAgencies,
-  getStatisticsByType,
-} from "../services/api";
-
-// Components
+import { getBiddings, getAwards, getOrderPlans } from "../services/api";
 import DateRangeFilter from "../components/filters/DateRangeFilter";
 import TypeFilter from "../components/filters/TypeFilter";
 import SearchBar from "../components/filters/SearchBar";
-import DailyChart from "../components/charts/DailyChart";
-import TypeChart from "../components/charts/TypeChart";
-import AgencyChart from "../components/charts/AgencyChart";
-import TopAgenciesTable from "../components/tables/TopAgenciesTable";
 import BiddingsList from "../components/tables/BiddingsList";
 import AwardsList from "../components/tables/AwardsList";
 import OrderPlansList from "../components/tables/OrderPlansList";
 import BiddingDetailModal from "../components/BiddingDetailModal";
-import TabPanel from "../components/TabPanel";
+import AwardDetailModal from "../components/AwardDetailModal";
+import OrderPlanDetailModal from "../components/OrderPlanDetailModal";
+import DailyChart from "../components/charts/DailyChart";
+import TypeChart from "../components/charts/TypeChart";
+import AgencyChart from "../components/charts/AgencyChart";
+import TopAgenciesTable from "../components/tables/TopAgenciesTable";
 
-// Chart.js 등록
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
+const Dashboard = () => {
+  const [currentTab, setCurrentTab] = useState(0);
+  const [loading, setLoading] = useState(false);
 
-function Dashboard() {
+  // 입찰공고 상태
+  const [biddings, setBiddings] = useState([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+
+  // 낙찰정보 상태
+  const [awards, setAwards] = useState([]);
+  const [awardsPage, setAwardsPage] = useState(1);
+  const [awardsTotalPages, setAwardsTotalPages] = useState(0);
+
+  // 발주계획 상태
+  const [orderPlans, setOrderPlans] = useState([]);
+  const [plansPage, setPlansPage] = useState(1);
+  const [plansTotalPages, setPlansTotalPages] = useState(0);
+
+  // 통계 데이터 상태
+  const [dailyData, setDailyData] = useState([]);
+  const [typeData, setTypeData] = useState([]);
+  const [agencyData, setAgencyData] = useState([]);
+
+  // 필터 상태
+  const [filters, setFilters] = useState({
+    startDate: null,
+    endDate: null,
+    noticeType: "",
+    search: "",
+  });
+
+  // 모달 상태
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [modalOpen, setModalOpen] = useState(false);
+
   // 금액 포맷
   const formatAmount = (amount) => {
     if (!amount && amount !== 0) return "-";
@@ -75,243 +74,136 @@ function Dashboard() {
     }
   };
 
-  // State
-  const [loading, setLoading] = useState(true);
-  const [topAgencies, setTopAgencies] = useState([]);
-  const [dailyStats, setDailyStats] = useState([]);
-  const [typeStats, setTypeStats] = useState([]);
-
-  // 탭 State
-  const [currentTab, setCurrentTab] = useState(0);
-
-  // 필터 State
-  const [startDate, setStartDate] = useState(dayjs().subtract(30, "day"));
-  const [endDate, setEndDate] = useState(dayjs());
-  const [noticeType, setNoticeType] = useState("");
-  const [searchText, setSearchText] = useState("");
-  const [limit] = useState(20);
-
-  // 입찰공고 State
-  const [recentBiddings, setRecentBiddings] = useState([]);
-  const [page, setPage] = useState(1);
-  const [total, setTotal] = useState(0);
-
-  // 낙찰정보 State
-  const [awards, setAwards] = useState([]);
-  const [awardsPage, setAwardsPage] = useState(1);
-  const [awardsTotal, setAwardsTotal] = useState(0);
-
-  // 발주계획 State
-  const [orderPlans, setOrderPlans] = useState([]);
-  const [plansPage, setPlansPage] = useState(1);
-  const [plansTotal, setPlansTotal] = useState(0);
-
-  // 상세 모달 State
-  const [selectedBidding, setSelectedBidding] = useState(null);
-  const [modalOpen, setModalOpen] = useState(false);
-
-  // 데이터 로드
+  // 초기 데이터 로드
   useEffect(() => {
     loadData();
-  }, []); // 빈 배열로 1번만 실행
+    loadStatistics();
+  }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // 입찰공고
-      const biddingsData = await getBiddings({
-        limit: limit,
-        skip: (page - 1) * limit,
-      });
-      if (biddingsData) {
-        setRecentBiddings(biddingsData.items || []);
-        setTotal(biddingsData.total || 0);
-      }
-
-      // 낙찰정보
-      const awardsData = await getAwards({
-        limit: limit,
-        skip: (awardsPage - 1) * limit,
-      });
-      if (awardsData) {
-        setAwards(awardsData.items || []);
-        setAwardsTotal(awardsData.total || 0);
-      }
-
-      // 발주계획
-      const plansData = await getOrderPlans({
-        limit: limit,
-        skip: (plansPage - 1) * limit,
-      });
-      if (plansData) {
-        setOrderPlans(plansData.items || []);
-        setPlansTotal(plansData.total || 0);
-      }
-
-      // TOP 기관
-      const agenciesData = await getTopAgencies(10);
-      setTopAgencies(agenciesData);
-
-      // 일별 통계
-      const dailyData = await getDailyStatistics(30);
-      setDailyStats(dailyData);
-
-      // 유형별 통계
-      const typeData = await getStatisticsByType();
-      setTypeStats(typeData);
+      await Promise.all([loadBiddings(1), loadAwards(1), loadOrderPlans(1)]);
     } catch (error) {
-      console.error("데이터 로딩 에러:", error);
+      console.error("데이터 로드 실패:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 탭 변경
+  // 통계 데이터 로드
+  const loadStatistics = async () => {
+    try {
+      const [dailyRes, typeRes, agencyRes] = await Promise.all([
+        fetch("/api/statistics/daily")
+          .then((r) => r.json())
+          .catch(() => []),
+        fetch("/api/statistics/by-type")
+          .then((r) => r.json())
+          .catch(() => []),
+        fetch("/api/statistics/top-agencies")
+          .then((r) => r.json())
+          .catch(() => []),
+      ]);
+
+      setDailyData(dailyRes);
+      setTypeData(typeRes);
+      setAgencyData(agencyRes);
+    } catch (error) {
+      console.error("통계 로드 실패:", error);
+      setDailyData([]);
+      setTypeData([]);
+      setAgencyData([]);
+    }
+  };
+
+  const buildParams = (pageNum) => {
+    const params = {
+      page: pageNum,
+      page_size: 20,
+    };
+
+    if (filters.startDate) params.start_date = filters.startDate;
+    if (filters.endDate) params.end_date = filters.endDate;
+    if (filters.noticeType) params.notice_type = filters.noticeType;
+    if (filters.search) params.search = filters.search;
+
+    return params;
+  };
+
+  const loadBiddings = async (pageNum) => {
+    try {
+      const response = await getBiddings(buildParams(pageNum));
+      setBiddings(response.items || []);
+      setTotalPages(Math.ceil((response.total || 0) / 20));
+    } catch (error) {
+      console.error("입찰공고 로드 실패:", error);
+      setBiddings([]);
+    }
+  };
+
+  const loadAwards = async (pageNum) => {
+    try {
+      const response = await getAwards(buildParams(pageNum));
+      setAwards(response.items || []);
+      setAwardsTotalPages(Math.ceil((response.total || 0) / 20));
+    } catch (error) {
+      console.error("낙찰정보 로드 실패:", error);
+      setAwards([]);
+    }
+  };
+
+  const loadOrderPlans = async (pageNum) => {
+    try {
+      const response = await getOrderPlans(buildParams(pageNum));
+      setOrderPlans(response.items || []);
+      setPlansTotalPages(Math.ceil((response.total || 0) / 20));
+    } catch (error) {
+      console.error("발주계획 로드 실패:", error);
+      setOrderPlans([]);
+    }
+  };
+
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
   };
 
-  // 필터 적용
-  const handleFilter = async () => {
-    setPage(1);
-    setAwardsPage(1);
-    setPlansPage(1);
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    loadBiddings(value);
+  };
 
-    try {
-      setLoading(true);
-      const params = {
-        limit: limit,
-        skip: 0,
-        notice_type: noticeType || undefined,
-        search: searchText || undefined,
-      };
+  const handleAwardsPageChange = (event, value) => {
+    setAwardsPage(value);
+    loadAwards(value);
+  };
 
-      // 현재 탭에 따라 데이터 로드
-      if (currentTab === 0) {
-        const biddingsData = await getBiddings(params);
-        if (biddingsData) {
-          setRecentBiddings(biddingsData.items || []);
-          setTotal(biddingsData.total || 0);
-        }
-      } else if (currentTab === 1) {
-        const awardsData = await getAwards(params);
-        if (awardsData) {
-          setAwards(awardsData.items || []);
-          setAwardsTotal(awardsData.total || 0);
-        }
-      } else if (currentTab === 2) {
-        const plansData = await getOrderPlans({
-          limit: limit,
-          skip: 0,
-          search: searchText || undefined,
-        });
-        if (plansData) {
-          setOrderPlans(plansData.items || []);
-          setPlansTotal(plansData.total || 0);
-        }
-      }
-    } catch (error) {
-      console.error("필터 에러:", error);
-    } finally {
-      setLoading(false);
+  const handlePlansPageChange = (event, value) => {
+    setPlansPage(value);
+    loadOrderPlans(value);
+  };
+
+  const handleFilter = () => {
+    if (currentTab === 0) {
+      setPage(1);
+      loadBiddings(1);
+    } else if (currentTab === 1) {
+      setAwardsPage(1);
+      loadAwards(1);
+    } else if (currentTab === 2) {
+      setPlansPage(1);
+      loadOrderPlans(1);
     }
   };
 
-  // 필터 초기화
-  const handleReset = () => {
-    setStartDate(dayjs().subtract(30, "day"));
-    setEndDate(dayjs());
-    setNoticeType("");
-    setSearchText("");
-    setPage(1);
-    setAwardsPage(1);
-    setPlansPage(1);
-    loadData();
-  };
-
-  // 입찰공고 페이지 변경
-  const handlePageChange = async (newPage) => {
-    setPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    try {
-      setLoading(true);
-      const params = {
-        limit: limit,
-        skip: (newPage - 1) * limit,
-        notice_type: noticeType || undefined,
-        search: searchText || undefined,
-      };
-
-      const biddingsData = await getBiddings(params);
-      if (biddingsData) {
-        setRecentBiddings(biddingsData.items || []);
-        setTotal(biddingsData.total || 0);
-      }
-    } catch (error) {
-      console.error("페이지 변경 에러:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 낙찰정보 페이지 변경
-  const handleAwardsPageChange = async (newPage) => {
-    setAwardsPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    try {
-      setLoading(true);
-      const awardsData = await getAwards({
-        limit: limit,
-        skip: (newPage - 1) * limit,
-        notice_type: noticeType || undefined,
-        search: searchText || undefined,
-      });
-      if (awardsData) {
-        setAwards(awardsData.items || []);
-        setAwardsTotal(awardsData.total || 0);
-      }
-    } catch (error) {
-      console.error("페이지 변경 에러:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 발주계획 페이지 변경
-  const handlePlansPageChange = async (newPage) => {
-    setPlansPage(newPage);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-
-    try {
-      setLoading(true);
-      const plansData = await getOrderPlans({
-        limit: limit,
-        skip: (newPage - 1) * limit,
-        search: searchText || undefined,
-      });
-      if (plansData) {
-        setOrderPlans(plansData.items || []);
-        setPlansTotal(plansData.total || 0);
-      }
-    } catch (error) {
-      console.error("페이지 변경 에러:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 상세 모달
   const handleItemClick = (item) => {
-    setSelectedBidding(item);
+    setSelectedItem(item);
     setModalOpen(true);
   };
 
-  const handleModalClose = () => {
+  const handleCloseModal = () => {
     setModalOpen(false);
-    setSelectedBidding(null);
+    setSelectedItem(null);
   };
 
   if (loading) {
@@ -320,7 +212,7 @@ function Dashboard() {
         display="flex"
         justifyContent="center"
         alignItems="center"
-        minHeight="80vh"
+        minHeight="100vh"
       >
         <CircularProgress />
       </Box>
@@ -328,122 +220,171 @@ function Dashboard() {
   }
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100vh", bgcolor: "#f5f5f5", p: 3 }}>
+    <Container maxWidth="xl" sx={{ py: 4 }}>
+      <Typography variant="h4" gutterBottom>
+        G2B 입찰 정보 대시보드
+      </Typography>
+
       {/* 필터 */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box display="flex" gap={2} flexWrap="wrap" alignItems="center">
-          <DateRangeFilter
-            startDate={startDate}
-            endDate={endDate}
-            onStartDateChange={setStartDate}
-            onEndDateChange={setEndDate}
-          />
-          <TypeFilter
-            value={noticeType}
-            onChange={(e) => setNoticeType(e.target.value)}
-          />
-          <SearchBar
-            value={searchText}
-            onChange={setSearchText}
-            placeholder="공고명, 기관명, 업체명 검색"
-          />
-          <Box sx={{ ml: "auto", display: "flex", gap: 1 }}>
-            <Button variant="contained" onClick={handleFilter}>
-              검색
-            </Button>
-            <Button variant="outlined" onClick={handleReset}>
-              초기화
-            </Button>
+      <Box sx={{ mb: 3, display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <DateRangeFilter
+          startDate={filters.startDate}
+          endDate={filters.endDate}
+          onStartDateChange={(date) =>
+            setFilters({ ...filters, startDate: date })
+          }
+          onEndDateChange={(date) => setFilters({ ...filters, endDate: date })}
+        />
+        <TypeFilter
+          value={filters.noticeType}
+          onChange={(type) => setFilters({ ...filters, noticeType: type })}
+        />
+        <SearchBar
+          value={filters.search}
+          onChange={(search) => setFilters({ ...filters, search })}
+          onSearch={handleFilter}
+        />
+      </Box>
+
+      {/* 통계 차트 */}
+      {(dailyData.length > 0 ||
+        typeData.length > 0 ||
+        agencyData.length > 0) && (
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h6" gutterBottom>
+            통계
+          </Typography>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+              gap: 2,
+              mb: 2,
+            }}
+          >
+            {dailyData.length > 0 && <DailyChart data={dailyData} />}
+            {typeData.length > 0 && <TypeChart data={typeData} />}
+          </Box>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(400px, 1fr))",
+              gap: 2,
+            }}
+          >
+            {agencyData.length > 0 && <AgencyChart data={agencyData} />}
+            {agencyData.length > 0 && (
+              <TopAgenciesTable data={agencyData} formatAmount={formatAmount} />
+            )}
           </Box>
         </Box>
-      </Paper>
+      )}
 
       {/* 탭 */}
-      <Paper sx={{ mb: 3 }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 2 }}>
         <Tabs value={currentTab} onChange={handleTabChange}>
           <Tab label="입찰공고" />
           <Tab label="낙찰정보" />
           <Tab label="발주계획" />
         </Tabs>
-      </Paper>
+      </Box>
 
-      {/* 메인 레이아웃: 왼쪽 목록, 오른쪽 통계 */}
-      <Grid container spacing={3}>
-        {/* 왼쪽: 탭별 목록 */}
-        <Grid item xs={12} lg={7}>
-          <TabPanel value={currentTab} index={0}>
-            <BiddingsList
-              biddings={recentBiddings}
-              formatAmount={formatAmount}
-              total={total}
+      {/* 탭 패널 */}
+      {currentTab === 0 && (
+        <>
+          <BiddingsList
+            biddings={biddings}
+            formatAmount={formatAmount}
+            total={biddings.length}
+            page={page}
+            limit={20}
+            onPageChange={handlePageChange}
+            onItemClick={handleItemClick}
+          />
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={totalPages}
               page={page}
-              limit={limit}
-              onPageChange={handlePageChange}
-              onItemClick={handleItemClick}
+              onChange={handlePageChange}
+              color="primary"
             />
-          </TabPanel>
-
-          <TabPanel value={currentTab} index={1}>
-            <AwardsList
-              awards={awards}
-              formatAmount={formatAmount}
-              total={awardsTotal}
-              page={awardsPage}
-              limit={limit}
-              onPageChange={handleAwardsPageChange}
-              onItemClick={handleItemClick}
-            />
-          </TabPanel>
-
-          <TabPanel value={currentTab} index={2}>
-            <OrderPlansList
-              plans={orderPlans}
-              formatAmount={formatAmount}
-              total={plansTotal}
-              page={plansPage}
-              limit={limit}
-              onPageChange={handlePlansPageChange}
-              onItemClick={handleItemClick}
-            />
-          </TabPanel>
-        </Grid>
-
-        {/* 오른쪽: 통계 */}
-        <Grid item xs={12} lg={5}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* 일별 추이 차트 */}
-            <Paper sx={{ p: 3, height: 400 }}>
-              <DailyChart data={dailyStats} />
-            </Paper>
-
-            {/* 유형별 차트 */}
-            <Paper sx={{ p: 3, height: 400 }}>
-              <TypeChart data={typeStats} />
-            </Paper>
-
-            {/* TOP 5 기관 테이블 */}
-            <TopAgenciesTable
-              agencies={topAgencies}
-              formatAmount={formatAmount}
-            />
-
-            {/* TOP 기관 바 차트 */}
-            <Paper sx={{ p: 3, height: 500 }}>
-              <AgencyChart data={topAgencies} />
-            </Paper>
           </Box>
-        </Grid>
-      </Grid>
+        </>
+      )}
 
-      {/* 상세 모달 */}
-      <BiddingDetailModal
-        open={modalOpen}
-        onClose={handleModalClose}
-        bidding={selectedBidding}
-        formatAmount={formatAmount}
-      />
-    </Box>
+      {currentTab === 1 && (
+        <>
+          <AwardsList
+            awards={awards}
+            formatAmount={formatAmount}
+            total={awards.length}
+            page={awardsPage}
+            limit={20}
+            onPageChange={handleAwardsPageChange}
+            onItemClick={handleItemClick}
+          />
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={awardsTotalPages}
+              page={awardsPage}
+              onChange={handleAwardsPageChange}
+              color="primary"
+            />
+          </Box>
+        </>
+      )}
+
+      {currentTab === 2 && (
+        <>
+          <OrderPlansList
+            plans={orderPlans}
+            formatAmount={formatAmount}
+            total={orderPlans.length}
+            page={plansPage}
+            limit={20}
+            onPageChange={handlePlansPageChange}
+            onItemClick={handleItemClick}
+          />
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
+            <Pagination
+              count={plansTotalPages}
+              page={plansPage}
+              onChange={handlePlansPageChange}
+              color="primary"
+            />
+          </Box>
+        </>
+      )}
+
+      {/* 상세보기 모달 - 탭별로 다른 모달 */}
+      {currentTab === 0 && (
+        <BiddingDetailModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          bidding={selectedItem}
+          formatAmount={formatAmount}
+        />
+      )}
+
+      {currentTab === 1 && (
+        <AwardDetailModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          award={selectedItem}
+          formatAmount={formatAmount}
+        />
+      )}
+
+      {currentTab === 2 && (
+        <OrderPlanDetailModal
+          open={modalOpen}
+          onClose={handleCloseModal}
+          plan={selectedItem}
+          formatAmount={formatAmount}
+        />
+      )}
+    </Container>
   );
-}
+};
 
 export default Dashboard;
