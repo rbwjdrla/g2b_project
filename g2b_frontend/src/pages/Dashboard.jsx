@@ -9,6 +9,19 @@ import {
   Pagination,
   CircularProgress,
 } from "@mui/material";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler,
+} from "chart.js";
 import { getBiddings, getAwards, getOrderPlans } from "../services/api";
 import DateRangeFilter from "../components/filters/DateRangeFilter";
 import TypeFilter from "../components/filters/TypeFilter";
@@ -23,6 +36,20 @@ import DailyChart from "../components/charts/DailyChart";
 import TypeChart from "../components/charts/TypeChart";
 import AgencyChart from "../components/charts/AgencyChart";
 import TopAgenciesTable from "../components/tables/TopAgenciesTable";
+
+// Chart.js 등록
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  BarElement,
+  ArcElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+);
 
 const Dashboard = () => {
   const [currentTab, setCurrentTab] = useState(0);
