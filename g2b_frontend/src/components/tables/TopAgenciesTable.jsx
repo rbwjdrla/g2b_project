@@ -1,3 +1,4 @@
+// src/components/tables/TopAgenciesTable.jsx
 import {
   Paper,
   Typography,
@@ -9,7 +10,27 @@ import {
   TableRow,
 } from "@mui/material";
 
-function TopAgenciesTable({ agencies, formatAmount }) {
+function TopAgenciesTable({ data, formatAmount }) {
+  // ✅ data로 변경
+  // ✅ 안전 처리 추가
+  if (!data || data.length === 0) {
+    return (
+      <Paper sx={{ p: 3 }}>
+        <Typography variant="h5" gutterBottom>
+          발주 TOP 5 기관
+        </Typography>
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          align="center"
+          py={2}
+        >
+          데이터가 없습니다.
+        </Typography>
+      </Paper>
+    );
+  }
+
   return (
     <Paper sx={{ p: 3 }}>
       <Typography variant="h5" gutterBottom>
@@ -26,15 +47,17 @@ function TopAgenciesTable({ agencies, formatAmount }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {agencies.slice(0, 5).map((agency, index) => (
+            {data.slice(0, 5).map((agency, index) => (
               <TableRow key={index}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{agency.agency}</TableCell>
-                <TableCell align="right">
-                  {agency.count.toLocaleString()}건
+                <TableCell>
+                  {agency.agency || agency.ordering_agency || "-"}
                 </TableCell>
                 <TableCell align="right">
-                  {formatAmount(agency.total_budget)}
+                  {(agency.count || 0).toLocaleString()}건
+                </TableCell>
+                <TableCell align="right">
+                  {formatAmount(agency.total_budget || agency.total_amount)}
                 </TableCell>
               </TableRow>
             ))}
