@@ -19,10 +19,10 @@ const CategoryFilter = ({ value, onChange }) => {
 
   return (
     <FormControl size="small" sx={{ minWidth: 150 }}>
-      <InputLabel>AI 카테고리</InputLabel>
+      <InputLabel>카테고리</InputLabel>
       <Select
         value={value}
-        label="AI 카테고리"
+        label="카테고리"
         onChange={(e) => onChange(e.target.value)}
       >
         {categories.map((cat) => (
