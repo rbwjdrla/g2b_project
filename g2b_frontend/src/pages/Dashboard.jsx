@@ -32,7 +32,6 @@ import TypeFilter from "../components/filters/TypeFilter";
 import SearchBar from "../components/filters/SearchBar";
 import BudgetFilter from "../components/filters/BudgetFilter";
 import CategoryFilter from "../components/filters/CategoryFilter";
-import CompetitionFilter from "../components/filters/CompetitionFilter";
 import BiddingsList from "../components/tables/BiddingsList";
 import AwardsList from "../components/tables/AwardsList";
 import OrderPlansList from "../components/tables/OrderPlansList";
@@ -60,14 +59,17 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(false);
 
   const [biddings, setBiddings] = useState([]);
+  const [biddingsTotal, setBiddingsTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
   const [awards, setAwards] = useState([]);
+  const [awardsTotal, setAwardsTotal] = useState(0);
   const [awardsPage, setAwardsPage] = useState(1);
   const [awardsTotalPages, setAwardsTotalPages] = useState(0);
 
   const [orderPlans, setOrderPlans] = useState([]);
+  const [plansTotal, setPlansTotal] = useState(0);
   const [plansPage, setPlansPage] = useState(1);
   const [plansTotalPages, setPlansTotalPages] = useState(0);
 
@@ -82,7 +84,6 @@ const Dashboard = () => {
     minBudget: "",
     maxBudget: "",
     aiCategory: "",
-    competitionLevel: "",
   });
 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -162,9 +163,6 @@ const Dashboard = () => {
     if (filters.aiCategory) {
       params.ai_category = filters.aiCategory;
     }
-    if (filters.competitionLevel) {
-      params.competition_level = filters.competitionLevel;
-    }
       params.search = filters.search;
     }
 
@@ -176,10 +174,12 @@ const Dashboard = () => {
     try {
       const response = await getBiddings(buildParams(pageNum));
       setBiddings(response.items || []);
+      setBiddingsTotal(response.total || 0);
       setTotalPages(Math.ceil((response.total || 0) / 20));
     } catch (error) {
       console.error("입찰공고 로드 실패:", error);
       setBiddings([]);
+      setBiddingsTotal(0);
     }
   };
 
@@ -187,10 +187,12 @@ const Dashboard = () => {
     try {
       const response = await getAwards(buildParams(pageNum));
       setAwards(response.items || []);
+      setAwardsTotal(response.total || 0);
       setAwardsTotalPages(Math.ceil((response.total || 0) / 20));
     } catch (error) {
       console.error("낙찰정보 로드 실패:", error);
       setAwards([]);
+      setAwardsTotal(0);
     }
   };
 
@@ -198,10 +200,12 @@ const Dashboard = () => {
     try {
       const response = await getOrderPlans(buildParams(pageNum));
       setOrderPlans(response.items || []);
+      setPlansTotal(response.total || 0);
       setPlansTotalPages(Math.ceil((response.total || 0) / 20));
     } catch (error) {
       console.error("발주계획 로드 실패:", error);
       setOrderPlans([]);
+      setPlansTotal(0);
     }
   };
 
@@ -252,7 +256,6 @@ const Dashboard = () => {
       minBudget: "",
       maxBudget: "",
       aiCategory: "",
-      competitionLevel: "",
     });
     setPage(1);
     setAwardsPage(1);
@@ -338,10 +341,6 @@ const Dashboard = () => {
             value={filters.aiCategory}
             onChange={(value) => setFilters({ ...filters, aiCategory: value })}
           />
-          <CompetitionFilter
-            value={filters.competitionLevel}
-            onChange={(value) => setFilters({ ...filters, competitionLevel: value })}
-          />
           <Button
             variant="contained"
             color="primary"
@@ -375,7 +374,7 @@ const Dashboard = () => {
               <BiddingsList
                 biddings={biddings}
                 formatAmount={formatAmount}
-                total={biddings.length}
+                total={biddingsTotal}
                 page={page}
                 limit={20}
                 onPageChange={handlePageChange}
@@ -397,7 +396,7 @@ const Dashboard = () => {
               <AwardsList
                 awards={awards}
                 formatAmount={formatAmount}
-                total={awards.length}
+                total={awardsTotal}
                 page={awardsPage}
                 limit={20}
                 onPageChange={handleAwardsPageChange}
@@ -419,7 +418,7 @@ const Dashboard = () => {
               <OrderPlansList
                 plans={orderPlans}
                 formatAmount={formatAmount}
-                total={orderPlans.length}
+                total={plansTotal}
                 page={plansPage}
                 limit={20}
                 onPageChange={handlePlansPageChange}

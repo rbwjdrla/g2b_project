@@ -57,17 +57,6 @@ function BiddingsList({ biddings, formatAmount, total, page, limit, onPageChange
                         color="info"
                       />
                     )}
-                    {bidding.competition_level && (
-                      <Chip
-                        label={`경쟁: ${bidding.competition_level}`}
-                        size="small"
-                        color={
-                          bidding.competition_level === '고' ? 'error' :
-                          bidding.competition_level === '중' ? 'warning' : 'success'
-                        }
-                        variant="outlined"
-                      />
-                    )}
                   </Box>
                 </Box>
                 <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
