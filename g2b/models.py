@@ -38,6 +38,11 @@ class Bidding(Base):
     description = Column(Text, nullable=True, comment="공고 상세 내용")
     bidding_url = Column(String(500), nullable=True, comment="나라장터 상세 페이지 URL")
 
+    # ML 분석 결과 필드
+    ai_category = Column(String(100), nullable=True, comment="AI 자동 분류 카테고리")
+    ai_tags = Column(Text, nullable=True, comment="AI 생성 태그 (JSON)")
+    competition_level = Column(String(20), nullable=True, comment="경쟁 강도 (저/중/고)")
+
     created_at = Column(DateTime, default=func.now(), nullable=False, comment="데이터 생성 시간")
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False, comment="데이터 수정 시간")
 

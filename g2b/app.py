@@ -67,12 +67,13 @@ app.add_middleware(
 )
 
 # ==================== 라우터 연결 ====================
-from routers import biddings, awards, orderplans, statistics
+from routers import biddings, awards, orderplans, statistics, ml
 
 app.include_router(biddings.router)
 app.include_router(awards.router)
 app.include_router(orderplans.router)
 app.include_router(statistics.router)
+app.include_router(ml.router)
 
 # ==================== 기본 엔드포인트 ====================
 @app.get("/")
