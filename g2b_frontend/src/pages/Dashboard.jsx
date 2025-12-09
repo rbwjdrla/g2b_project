@@ -25,6 +25,7 @@ import {
   Legend,
   Filler,
 } from "chart.js";
+import dayjs from "dayjs";
 import { getBiddings, getAwards, getOrderPlans } from "../services/api";
 import DateRangeFilter from "../components/filters/DateRangeFilter";
 import TypeFilter from "../components/filters/TypeFilter";
@@ -71,8 +72,8 @@ const Dashboard = () => {
   const [typeData, setTypeData] = useState([]);
 
   const [filters, setFilters] = useState({
-    startDate: null,
-    endDate: null,
+    startDate: dayjs().subtract(30, "day"),
+    endDate: dayjs(),
     noticeType: "",
     search: "",
   });
@@ -135,11 +136,20 @@ const Dashboard = () => {
       page_size: 20,
     };
 
-    if (filters.startDate) params.start_date = filters.startDate;
-    if (filters.endDate) params.end_date = filters.endDate;
-    if (filters.noticeType) params.notice_type = filters.noticeType;
-    if (filters.search) params.search = filters.search;
+    if (filters.startDate) {
+      params.start_date = filters.startDate.format("YYYY-MM-DD");
+    }
+    if (filters.endDate) {
+      params.end_date = filters.endDate.format("YYYY-MM-DD");
+    }
+    if (filters.noticeType) {
+      params.notice_type = filters.noticeType;
+    }
+    if (filters.search) {
+      params.search = filters.search;
+    }
 
+    console.log("API 요청 params:", params);
     return params;
   };
 
@@ -196,6 +206,12 @@ const Dashboard = () => {
   };
 
   const handleFilter = () => {
+    console.log("=== 필터 조건 ===");
+    console.log("startDate:", filters.startDate?.format("YYYY-MM-DD"));
+    console.log("endDate:", filters.endDate?.format("YYYY-MM-DD"));
+    console.log("noticeType:", filters.noticeType);
+    console.log("search:", filters.search);
+
     if (currentTab === 0) {
       setPage(1);
       loadBiddings(1);
@@ -210,8 +226,8 @@ const Dashboard = () => {
 
   const handleReset = () => {
     setFilters({
-      startDate: null,
-      endDate: null,
+      startDate: dayjs().subtract(30, "day"),
+      endDate: dayjs(),
       noticeType: "",
       search: "",
     });
@@ -374,17 +390,15 @@ const Dashboard = () => {
           )}
         </Grid>
 
-        {/* 오른쪽: 통계 패널 - 차트 2개만 */}
+        {/* 오른쪽: 통계 패널 */}
         <Grid item xs={12} lg={4}>
           <Box sx={{ position: "sticky", top: 20 }}>
-            {/* 최근 30일 입찰공고 추이 */}
             {dailyData.length > 0 && (
               <Paper sx={{ p: 2, mb: 3, height: 350 }}>
                 <DailyChart data={dailyData} />
               </Paper>
             )}
 
-            {/* 유형별 입찰공고 분포 */}
             {typeData.length > 0 && (
               <Paper sx={{ p: 2, mb: 3, height: 350 }}>
                 <TypeChart data={typeData} />

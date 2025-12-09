@@ -1,3 +1,4 @@
+// src/services/api.js
 import axios from 'axios';
 
 const API_BASE_URL = '/api';
@@ -10,7 +11,6 @@ const api = axios.create({
   },
 });
 
-// ==================== 입찰공고 ====================
 export const getBiddings = async (params = {}) => {
   try {
     const response = await api.get('/biddings', { params });
@@ -31,7 +31,6 @@ export const getBiddingDetail = async (noticeNumber) => {
   }
 };
 
-// ==================== 낙찰정보 ====================
 export const getAwards = async (params = {}) => {
   try {
     const response = await api.get('/awards', { params });
@@ -42,10 +41,9 @@ export const getAwards = async (params = {}) => {
   }
 };
 
-// ==================== 발주계획 ====================
 export const getOrderPlans = async (params = {}) => {
   try {
-    const response = await api.get('/orderplans', { params });  // ← 수정!
+    const response = await api.get('/orderplans', { params });
     return response.data;
   } catch (error) {
     console.error('발주계획 조회 에러:', error);
@@ -53,7 +51,6 @@ export const getOrderPlans = async (params = {}) => {
   }
 };
 
-// ==================== 통계 ====================
 export const getStatisticsSummary = async () => {
   try {
     const response = await api.get('/statistics/summary');
