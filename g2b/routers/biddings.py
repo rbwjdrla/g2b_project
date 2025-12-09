@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import Optional
 from database import get_db
 from models import Bidding
@@ -33,11 +34,21 @@ def get_biddings(
     if search:
         query = query.filter(Bidding.title.contains(search))
 
-    # 예산 범위 필터
+    # 예산 범위 필터 (budget_amount 또는 estimated_price)
     if min_budget is not None:
-        query = query.filter(Bidding.budget_amount >= min_budget)
+        query = query.filter(
+            or_(
+                Bidding.budget_amount >= min_budget,
+                Bidding.estimated_price >= min_budget
+            )
+        )
     if max_budget is not None:
-        query = query.filter(Bidding.budget_amount <= max_budget)
+        query = query.filter(
+            or_(
+                Bidding.budget_amount <= max_budget,
+                Bidding.estimated_price <= max_budget
+            )
+        )
 
     # AI 카테고리 필터
     if ai_category:
