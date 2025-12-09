@@ -1,7 +1,6 @@
-import { Paper, Typography, Box, Pagination, Chip } from '@mui/material';
+import { Paper, Typography, Box, Chip } from '@mui/material';
 
-function OrderPlansList({ plans, formatAmount, total, page, limit, onPageChange, onItemClick }) {
-  const totalPages = Math.ceil(total / limit);
+function OrderPlansList({ plans, formatAmount, total, onItemClick }) {
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -60,18 +59,6 @@ function OrderPlansList({ plans, formatAmount, total, page, limit, onPageChange,
                 </Box>
               </Box>
             ))}
-
-            {/* 페이징 */}
-            <Box display="flex" justifyContent="center" mt={3}>
-              <Pagination 
-                count={totalPages} 
-                page={page} 
-                onChange={(e, value) => onPageChange(value)}
-                color="primary"
-                showFirstButton
-                showLastButton
-              />
-            </Box>
           </>
         )}
       </Box>

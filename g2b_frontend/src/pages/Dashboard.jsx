@@ -140,8 +140,8 @@ const Dashboard = () => {
 
   const buildParams = (pageNum) => {
     const params = {
-      page: pageNum,
-      page_size: 20,
+      skip: (pageNum - 1) * 20,
+      limit: 20,
     };
 
     if (filters.startDate) {
@@ -154,6 +154,8 @@ const Dashboard = () => {
       params.notice_type = filters.noticeType;
     }
     if (filters.search) {
+      params.search = filters.search;
+    }
     if (filters.minBudget) {
       params.min_budget = filters.minBudget;
     }
@@ -162,8 +164,6 @@ const Dashboard = () => {
     }
     if (filters.aiCategory) {
       params.ai_category = filters.aiCategory;
-    }
-      params.search = filters.search;
     }
 
     console.log("API 요청 params:", params);
@@ -375,9 +375,6 @@ const Dashboard = () => {
                 biddings={biddings}
                 formatAmount={formatAmount}
                 total={biddingsTotal}
-                page={page}
-                limit={20}
-                onPageChange={handlePageChange}
                 onItemClick={handleItemClick}
               />
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
@@ -386,6 +383,8 @@ const Dashboard = () => {
                   page={page}
                   onChange={handlePageChange}
                   color="primary"
+                  showFirstButton
+                  showLastButton
                 />
               </Box>
             </>
@@ -397,9 +396,6 @@ const Dashboard = () => {
                 awards={awards}
                 formatAmount={formatAmount}
                 total={awardsTotal}
-                page={awardsPage}
-                limit={20}
-                onPageChange={handleAwardsPageChange}
                 onItemClick={handleItemClick}
               />
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
@@ -408,6 +404,8 @@ const Dashboard = () => {
                   page={awardsPage}
                   onChange={handleAwardsPageChange}
                   color="primary"
+                  showFirstButton
+                  showLastButton
                 />
               </Box>
             </>
@@ -419,9 +417,6 @@ const Dashboard = () => {
                 plans={orderPlans}
                 formatAmount={formatAmount}
                 total={plansTotal}
-                page={plansPage}
-                limit={20}
-                onPageChange={handlePlansPageChange}
                 onItemClick={handleItemClick}
               />
               <Box sx={{ display: "flex", justifyContent: "center", mt: 3 }}>
@@ -430,6 +425,8 @@ const Dashboard = () => {
                   page={plansPage}
                   onChange={handlePlansPageChange}
                   color="primary"
+                  showFirstButton
+                  showLastButton
                 />
               </Box>
             </>
