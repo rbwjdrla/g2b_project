@@ -35,14 +35,24 @@ def get_biddings(
         query = query.filter(Bidding.title.contains(search))
 
     # 예산 범위 필터 (budget_amount 또는 estimated_price)
-    if min_budget is not None:
+    if min_budget is not None and max_budget is not None:
+        # 둘 다 있을 때: (budget_amount 범위 내) OR (estimated_price 범위 내)
+        query = query.filter(
+            or_(
+                (Bidding.budget_amount >= min_budget) & (Bidding.budget_amount <= max_budget),
+                (Bidding.estimated_price >= min_budget) & (Bidding.estimated_price <= max_budget)
+            )
+        )
+    elif min_budget is not None:
+        # 최소값만 있을 때
         query = query.filter(
             or_(
                 Bidding.budget_amount >= min_budget,
                 Bidding.estimated_price >= min_budget
             )
         )
-    if max_budget is not None:
+    elif max_budget is not None:
+        # 최대값만 있을 때
         query = query.filter(
             or_(
                 Bidding.budget_amount <= max_budget,
