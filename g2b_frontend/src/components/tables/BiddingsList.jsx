@@ -40,15 +40,51 @@ function BiddingsList({ biddings, formatAmount, total, page, limit, onPageChange
                   <Typography variant="subtitle1" fontWeight="bold" sx={{ flex: 1 }}>
                     {bidding.title}
                   </Typography>
-                  <Chip 
-                    label={bidding.notice_type} 
-                    size="small" 
-                    color={
-                      bidding.notice_type === '공사' ? 'error' :
-                      bidding.notice_type === '용역' ? 'primary' : 'success'
-                    }
-                    sx={{ ml: 2 }}
-                  />
+                  <Box display="flex" gap={1} flexWrap="wrap">
+                    <Chip
+                      label={bidding.notice_type}
+                      size="small"
+                      color={
+                        bidding.notice_type === '공사' ? 'error' :
+                        bidding.notice_type === '용역' ? 'primary' : 'success'
+                      }
+                    />
+                    {bidding.ai_category && (
+                      <Chip
+                        label={bidding.ai_category}
+                        size="small"
+                        variant="outlined"
+                        color="info"
+                      />
+                    )}
+                    {bidding.competition_level && (
+                      <Chip
+                        label={`경쟁: ${bidding.competition_level}`}
+                        size="small"
+                        color={
+                          bidding.competition_level === '고' ? 'error' :
+                          bidding.competition_level === '중' ? 'warning' : 'success'
+                        }
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
+                </Box>
+                <Box display="flex" gap={1} flexWrap="wrap" mb={1}>
+                  {bidding.ai_tags && JSON.parse(bidding.ai_tags).map((tag, idx) => (
+                    <Chip
+                      key={idx}
+                      label={tag}
+                      size="small"
+                      variant="filled"
+                      sx={{
+                        bgcolor: '#e3f2fd',
+                        color: '#1976d2',
+                        fontWeight: 'bold',
+                        fontSize: '0.7rem'
+                      }}
+                    />
+                  ))}
                 </Box>
                 <Box display="flex" gap={3} flexWrap="wrap">
                   <Typography variant="body2" color="text.secondary">
