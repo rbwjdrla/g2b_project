@@ -1,16 +1,12 @@
 // src/components/tables/AwardsList.jsx
-import { Paper, Typography, Box, Pagination, Chip } from "@mui/material";
+import { Paper, Typography, Box, Chip } from "@mui/material";
 
 function AwardsList({
   awards,
   formatAmount,
   total,
-  page,
-  limit,
-  onPageChange,
   onItemClick,
 }) {
-  const totalPages = Math.ceil(total / limit);
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -91,18 +87,6 @@ function AwardsList({
                 </Box>
               </Box>
             ))}
-
-            {/* 페이징 */}
-            <Box display="flex" justifyContent="center" mt={3}>
-              <Pagination
-                count={totalPages}
-                page={page}
-                onChange={(e, value) => onPageChange(value)}
-                color="primary"
-                showFirstButton
-                showLastButton
-              />
-            </Box>
           </>
         )}
       </Box>
