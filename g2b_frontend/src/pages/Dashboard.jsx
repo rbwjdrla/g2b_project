@@ -30,6 +30,9 @@ import { getBiddings, getAwards, getOrderPlans } from "../services/api";
 import DateRangeFilter from "../components/filters/DateRangeFilter";
 import TypeFilter from "../components/filters/TypeFilter";
 import SearchBar from "../components/filters/SearchBar";
+import BudgetFilter from "../components/filters/BudgetFilter";
+import CategoryFilter from "../components/filters/CategoryFilter";
+import CompetitionFilter from "../components/filters/CompetitionFilter";
 import BiddingsList from "../components/tables/BiddingsList";
 import AwardsList from "../components/tables/AwardsList";
 import OrderPlansList from "../components/tables/OrderPlansList";
@@ -76,6 +79,10 @@ const Dashboard = () => {
     endDate: dayjs(),
     noticeType: "",
     search: "",
+    minBudget: "",
+    maxBudget: "",
+    aiCategory: "",
+    competitionLevel: "",
   });
 
   const [selectedItem, setSelectedItem] = useState(null);
@@ -146,6 +153,18 @@ const Dashboard = () => {
       params.notice_type = filters.noticeType;
     }
     if (filters.search) {
+    if (filters.minBudget) {
+      params.min_budget = filters.minBudget;
+    }
+    if (filters.maxBudget) {
+      params.max_budget = filters.maxBudget;
+    }
+    if (filters.aiCategory) {
+      params.ai_category = filters.aiCategory;
+    }
+    if (filters.competitionLevel) {
+      params.competition_level = filters.competitionLevel;
+    }
       params.search = filters.search;
     }
 
@@ -230,6 +249,10 @@ const Dashboard = () => {
       endDate: dayjs(),
       noticeType: "",
       search: "",
+      minBudget: "",
+      maxBudget: "",
+      aiCategory: "",
+      competitionLevel: "",
     });
     setPage(1);
     setAwardsPage(1);
@@ -274,6 +297,7 @@ const Dashboard = () => {
             gap: 2,
             flexWrap: "wrap",
             alignItems: "center",
+            mb: 2,
           }}
         >
           <DateRangeFilter
@@ -294,6 +318,29 @@ const Dashboard = () => {
             value={filters.search}
             onChange={(search) => setFilters({ ...filters, search })}
             onSearch={handleFilter}
+          />
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            flexWrap: "wrap",
+            alignItems: "center",
+          }}
+        >
+          <BudgetFilter
+            minBudget={filters.minBudget}
+            maxBudget={filters.maxBudget}
+            onMinChange={(value) => setFilters({ ...filters, minBudget: value })}
+            onMaxChange={(value) => setFilters({ ...filters, maxBudget: value })}
+          />
+          <CategoryFilter
+            value={filters.aiCategory}
+            onChange={(value) => setFilters({ ...filters, aiCategory: value })}
+          />
+          <CompetitionFilter
+            value={filters.competitionLevel}
+            onChange={(value) => setFilters({ ...filters, competitionLevel: value })}
           />
           <Button
             variant="contained"

@@ -60,12 +60,12 @@ class BiddingAnalyzer:
         tags = []
 
         title = bidding_data.get('title', '')
-        budget = bidding_data.get('budget_amount', 0)
+        budget = bidding_data.get('budget_amount')
         notice_date = bidding_data.get('notice_date')
         bid_close_date = bidding_data.get('bid_close_date')
 
         # 1. 예산 기반 태그
-        if budget:
+        if budget is not None and budget > 0:
             if budget >= 1_000_000_000:  # 10억 이상
                 tags.append("고액")
             elif budget >= 100_000_000:  # 1억 이상
@@ -110,16 +110,17 @@ class BiddingAnalyzer:
         # 기본 점수
         score = 0
 
-        budget = bidding_data.get('budget_amount', 0)
+        budget = bidding_data.get('budget_amount')
         notice_type = bidding_data.get('notice_type', '')
 
         # 1. 예산 기반 (예산이 클수록 경쟁 치열)
-        if budget >= 1_000_000_000:  # 10억 이상
-            score += 3
-        elif budget >= 500_000_000:  # 5억 이상
-            score += 2
-        elif budget >= 100_000_000:  # 1억 이상
-            score += 1
+        if budget is not None and budget > 0:
+            if budget >= 1_000_000_000:  # 10억 이상
+                score += 3
+            elif budget >= 500_000_000:  # 5억 이상
+                score += 2
+            elif budget >= 100_000_000:  # 1억 이상
+                score += 1
 
         # 2. 공고 유형 기반
         if notice_type in ['용역', '물품']:
