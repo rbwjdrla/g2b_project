@@ -18,6 +18,10 @@ class BiddingResponse(BaseModel):
     description: Optional[str] = None
     bidding_url: Optional[str] = None
     notice_type: Optional[str] = None
+    # ML 분석 필드
+    ai_category: Optional[str] = None
+    ai_tags: Optional[str] = None
+    competition_level: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
