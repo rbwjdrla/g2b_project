@@ -36,7 +36,7 @@
 |------------|------|
 | Backend    | Python, FastAPI, SQLAlchemy, APScheduler |
 | Database   | PostgreSQL |
-| ML         | scikit-learn, pandas, NumPy |
+| Classify   | scikit-learn, pandas, NumPy |
 | Frontend   | React, React Router, Material UI, Chart.js, dayjs |
 | Infra/기타 | Docker, Uvicorn, Pydantic, .env 환경 설정 |
 
