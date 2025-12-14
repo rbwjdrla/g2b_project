@@ -18,7 +18,9 @@ def get_biddings(
     search: Optional[str] = Query(None, description="공고명 검색어"),
     min_budget: Optional[int] = Query(None, description="최소 예산 (원)", ge=0),
     max_budget: Optional[int] = Query(None, description="최대 예산 (원)", ge=0),
-    ai_category: Optional[str] = Query(None, description="AI 카테고리 필터"),
+    ai_category: Optional[str] = Query(None, description="카테고리 필터"),
+    start_date: Optional[str] = Query(None, description="시작 날짜 (YYYY-MM-DD)"),
+    end_date: Optional[str] = Query(None, description="종료 날짜 (YYYY-MM-DD)"),
     db: Session = Depends(get_db),
 ):
     """입찰공고 목록 조회 (예산별 검색 포함)"""
@@ -60,7 +62,12 @@ def get_biddings(
             )
         )
 
-    # AI 카테고리 필터
+    if start_date:
+        query = query.filter(Bidding.notice_date >= start_date)
+    if end_date:
+        query = query.filter(Bidding.notice_date <= end_date + " 23:59:59")
+   
+   #  카테고리 필터
     if ai_category:
         query = query.filter(Bidding.ai_category == ai_category)
 
