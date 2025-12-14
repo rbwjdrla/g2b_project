@@ -61,11 +61,11 @@ def parse_datetime(date_str):
 
 
 def parse_int(value):
-    """문자열을 정수로 변환"""
+    """문자열  변환"""
     if not value:
         return None
     try:
-        return int(str(value).replace(",", ""))
+        return int(float(str(value).replace(",", "")))
     except:
         return None
 
