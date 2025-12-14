@@ -114,8 +114,8 @@ def upsert_biddings(items):
                 else:
                     budget_value = item.get("bdgtAmt")
                 
-                obj.budget_amount = int(budget_value) if budget_value else None
-                obj.estimated_price = int(item.get("presmptPrce")) if item.get("presmptPrce") else None
+                obj.budget_amount = int(float(budget_value)) if budget_value else None
+                obj.estimated_price = int(float(item.get("presmptPrce"))) if item.get("presmptPrce") else None
                 
                 obj.notice_date = parse_datetime(item.get("bidNtceDt"))
                 obj.bid_close_date = parse_datetime(item.get("bidClseDt"))
