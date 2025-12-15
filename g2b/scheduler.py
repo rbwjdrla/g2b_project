@@ -10,7 +10,7 @@ def create_scheduler():
     return scheduler
 
 def scheduled_job():
-    """스케줄된 작업 - 데이터 수집 + ML 분석"""
+    """스케줄된 작업 - 데이터 수집 + ML 분석 (2일치)"""
     from apis.main import run_all
     from database import SessionLocal
     from models import Bidding, Award
@@ -20,8 +20,8 @@ def scheduled_job():
     logger.info(f"⏰ 자동 데이터 수집 시작 ({today})")
 
     try:
-        # 1. 데이터 수집
-        run_all()
+        # 1. 데이터 수집 (2일치)
+        run_all(days=2)
         logger.info(f"✅ 자동 데이터 수집 완료 ({today})")
 
         # 2. 새로 수집된 데이터 ML 분석
@@ -76,7 +76,6 @@ def analyze_new_biddings():
                 # DB 업데이트
                 bidding.ai_category = result['ai_category']
                 bidding.ai_tags = result['ai_tags']
-                bidding.competition_level = result['competition_level']
 
                 # 10개마다 커밋
                 if i % 10 == 0:

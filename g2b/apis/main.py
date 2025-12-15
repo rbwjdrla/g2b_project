@@ -11,20 +11,20 @@ from .orderplan_api import fetch_plans, upsert_plans
 
 logger = logging.getLogger(__name__)
 
-def run_all():
+def run_all(days=2):
     """
-    전체 데이터 수집 (최근 30일)
-    스케줄러에서 매일 03:00 UTC에 자동 실행됨
+    전체 데이터 수집
+    스케줄러에서 10분마다 자동 실행됨 (기본 2일치, 실시간)
     """
     service_key = settings.SERVICE_KEY
-    
-    # 30일 전부터 오늘까지
+
+    # days일 전부터 오늘까지
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=30)
+    start_date = end_date - timedelta(days=days)
     start_day = start_date.strftime("%Y%m%d")
     end_day = end_date.strftime("%Y%m%d")
-    
-    logger.info(f"📅 G2B 데이터 수집 시작: {start_day} ~ {end_day}")
+
+    logger.info(f"📅 G2B 데이터 수집 시작: {start_day} ~ {end_day} ({days}일)")
     
     try:
         # 1) 입찰공고

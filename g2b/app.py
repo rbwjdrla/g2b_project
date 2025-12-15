@@ -31,17 +31,16 @@ async def lifespan(app: FastAPI):
     init_db()
     logger.info("✅ 데이터베이스 초기화 완료")
     
-    # 스케줄러 시작
+    # 스케줄러 시작 - 10분마다 2일치 데이터 수집 (실시간)
     scheduler.add_job(
         scheduled_job,
-        trigger="cron",
-        hour=3,
-        minute=0,
+        trigger="interval",
+        minutes=10,
         id="scheduled_job",
         replace_existing=True
     )
     scheduler.start()
-    logger.info("✅ 스케줄러 시작 (매일 03:00 UTC)")
+    logger.info("✅ 스케줄러 시작 (10분마다 2일치 데이터 수집 - 실시간)")
     
     yield
     
@@ -94,14 +93,14 @@ def health_check():
 
 # ==================== 수동 수집 ====================
 @app.post("/collect")
-def manual_collect():
+def manual_collect(days: int = 2):
     """수동 데이터 수집 트리거"""
     from apis.main import run_all
-    
-    logger.info("🔄 수동 데이터 수집 시작")
+
+    logger.info(f"🔄 수동 데이터 수집 시작 ({days}일)")
     try:
-        run_all()
-        return {"status": "success", "message": "데이터 수집 완료"}
+        run_all(days=days)
+        return {"status": "success", "message": f"데이터 수집 완료 ({days}일)"}
     except Exception as e:
         logger.error(f"❌ 수동 데이터 수집 실패: {e}")
         return {"status": "error", "message": str(e)}
