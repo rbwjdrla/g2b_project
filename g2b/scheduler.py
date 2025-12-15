@@ -1,6 +1,10 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime
 import logging
+from database import SessionLocal  
+from models import Bidding, Award  
+from ml_analyzer import analyzer  
+
 
 logger = logging.getLogger(__name__)
 
@@ -12,10 +16,6 @@ def create_scheduler():
 def scheduled_job():
     """스케줄된 작업 - 데이터 수집 + ML 분석 (2일치)"""
     from apis.main import run_all
-    from database import SessionLocal
-    from models import Bidding, Award
-    from ml_analyzer import analyzer
-
     today = datetime.now().strftime("%Y%m%d")
     logger.info(f"⏰ 자동 데이터 수집 시작 ({today})")
 
