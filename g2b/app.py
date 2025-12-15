@@ -31,16 +31,16 @@ async def lifespan(app: FastAPI):
     init_db()
     logger.info("✅ 데이터베이스 초기화 완료")
     
-    # 스케줄러 시작 - 1시간마다 2일치 데이터 수집
+    # 스케줄러 시작 - 10분마다 2일치 데이터 수집 (실시간)
     scheduler.add_job(
         scheduled_job,
         trigger="interval",
-        hours=1,
+        minutes=10,
         id="scheduled_job",
         replace_existing=True
     )
     scheduler.start()
-    logger.info("✅ 스케줄러 시작 (1시간마다 2일치 데이터 수집)")
+    logger.info("✅ 스케줄러 시작 (10분마다 2일치 데이터 수집 - 실시간)")
     
     yield
     

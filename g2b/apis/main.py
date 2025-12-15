@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def run_all(days=2):
     """
     전체 데이터 수집
-    스케줄러에서 1시간마다 자동 실행됨 (기본 2일치)
+    스케줄러에서 10분마다 자동 실행됨 (기본 2일치, 실시간)
     """
     service_key = settings.SERVICE_KEY
 
