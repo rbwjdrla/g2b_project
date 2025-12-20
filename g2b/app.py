@@ -35,7 +35,7 @@ async def lifespan(app: FastAPI):
     scheduler.add_job(
         scheduled_job,
         trigger="cron",
-        hours=3
+        hour=3
         minutes=0,
         id="scheduled_job",
         replace_existing=True
