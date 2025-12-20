@@ -28,7 +28,7 @@ def analyze_single_bidding(bidding_id: int, db: Session = Depends(get_db)):
     bidding = db.query(Bidding).filter(Bidding.id == bidding_id).first()
     if not bidding:
         raise HTTPException(status_code=404, detail="공고를 찾을 수 없습니다.")
-2
+
     # 관련 낙찰 데이터 조회 (같은 발주기관)
     awards = db.query(Award).filter(
         Award.ntce_instt_nm == bidding.ordering_agency

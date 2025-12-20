@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
         scheduled_job,
         trigger="cron",
         hour=3,
-        minutes=0,
+        minute=0,
         id="scheduled_job",
         replace_existing=True
     )
@@ -67,13 +67,13 @@ app.add_middleware(
 )
 
 # ==================== 라우터 연결 ====================
-from routers import biddings, awards, orderplans, statistics, ml
+from routers import biddings, awards, orderplans, statistics, classifier
 
 app.include_router(biddings.router)
 app.include_router(awards.router)
 app.include_router(orderplans.router)
 app.include_router(statistics.router)
-app.include_router(ml.router)
+app.include_router(classifier.router)
 
 # ==================== 기본 엔드포인트 ====================
 @app.get("/")
