@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def create_scheduler():
     """스케줄러 생성"""
-    scheduler = BackgroundScheduler(timezone="UTC")
+    scheduler = BackgroundScheduler(timezone="Asia/Seoul")
     return scheduler
 
 def scheduled_job():
