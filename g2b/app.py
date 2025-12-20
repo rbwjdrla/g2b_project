@@ -34,8 +34,9 @@ async def lifespan(app: FastAPI):
     # 스케줄러 시작 - 10분마다 2일치 데이터 수집 (실시간)
     scheduler.add_job(
         scheduled_job,
-        trigger="interval",
-        minutes=10,
+        trigger="cron",
+        hours=3
+        minutes=0,
         id="scheduled_job",
         replace_existing=True
     )
