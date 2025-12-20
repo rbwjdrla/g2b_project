@@ -15,7 +15,7 @@ from ml_analyzer import analyzer
 import logging
 import json
 
-router = APIRouter(prefix="/api/ml", tags=["ML 분석"])
+router = APIRouter(prefix="/api/ml", tags=["classify"])
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +28,7 @@ def analyze_single_bidding(bidding_id: int, db: Session = Depends(get_db)):
     bidding = db.query(Bidding).filter(Bidding.id == bidding_id).first()
     if not bidding:
         raise HTTPException(status_code=404, detail="공고를 찾을 수 없습니다.")
-
+2
     # 관련 낙찰 데이터 조회 (같은 발주기관)
     awards = db.query(Award).filter(
         Award.ntce_instt_nm == bidding.ordering_agency
@@ -42,7 +42,7 @@ def analyze_single_bidding(bidding_id: int, db: Session = Depends(get_db)):
         for a in awards if a.prtcpt_cnum
     ]
 
-    # ML 분석 실행
+    # 태그 부여 
     bidding_dict = {
         'title': bidding.title,
         'budget_amount': bidding.budget_amount,
