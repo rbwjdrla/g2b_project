@@ -64,7 +64,7 @@ g2b_project/
 │   │   ├── awards.py            # 낙찰/계약 API
 │   │   ├── orderplans.py        # 발주계획 API
 │   │   ├── statistics.py        # 통계 API
-│   │   └── ml.py                # ML 분석 API
+│   │   └── classifier.py        # 분류 분석 API
 │   └── utils.py                 # 공통 유틸 함수
 │
 ├── g2b_frontend/                # React Frontend
