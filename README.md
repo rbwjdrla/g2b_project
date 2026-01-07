@@ -1,15 +1,15 @@
-<img width="3300" height="862" alt="나라장터플러스" src="https://via.placeholder.com/3300x862/0066cc/ffffff?text=나라장터+Plus+–+실시간+입찰공고+모니터링+플랫폼" />
-
 # 🏛️ 나라장터 Plus - 실시간 입찰공고 모니터링 플랫폼
 
 <details>
 <summary> 📌 프로젝트 개요 </summary>
+<br>
   
-본 프로젝트는 **나라장터(G2B) 공공데이터 API**를 활용한 **입찰공고 모니터링 및 분석 플랫폼**입니다. <br><br>
+**프로젝트 기간** 2025.10 ~ 2025.12  
+<br>
 
-기존 나라장터의 제한적인 필터링, 분류 시스템 부재 문제를 해결하기 위해 개발되었습니다. <br><br>
-
-**1일 간격 자동 수집**, **키워드 기반 자동 분류** 및 **맥락 인식 태그 생성**으로 효율적인 정보 탐색을 지원합니다. <br><br>
+본 프로젝트는 **나라장터(G2B) 공공데이터 API**를 활용한 **입찰공고 모니터링 및 분석 플랫폼**입니다.<br>
+기존 나라장터의 제한적인 필터링, 분류 시스템 부재 문제를 해결하기 위해 개발되었습니다.<br>
+**1일 간격 자동 수집**, **키워드 기반 자동 분류** 및 **맥락 인식 태그 생성**으로 효율적인 정보 탐색을 지원합니다. 
 
 </details>
 
@@ -85,4 +85,135 @@
 - **Vercel** — 프론트엔드 자동 배포, CDN
 - **AWS RDS** — PostgreSQL 호스팅
 
+</details>
+
+# 📊 시스템 아키텍처
+
+<details>
+  <summary>데이터 수집 플로우</summary>
+
+```mermaid
+sequenceDiagram
+  participant S as APScheduler
+  participant API as 나라장터 API
+  participant B as FastAPI Backend
+  participant D as PostgreSQL
+
+  Note over S: 매일 새벽 3시시마다 실행
+  S->>B: scheduled_job() 호출
+  B->>API: fetch_biddings(days=1)
+  API-->>B: 입찰공고 JSON
+  B->>D: upsert_biddings()
+  
+  B->>API: fetch_awards(days=1)
+  API-->>B: 낙찰정보 JSON
+  B->>D: upsert_awards()
+  
+  B->>API: fetch_plans(days=1)
+  API-->>B: 발주계획 JSON
+  B->>D: upsert_plans()
+  
+  Note over B,D: 수집 완료
+```
+
+</details>
+
+<details>
+  <summary>자동 분류 및 태그 생성 플로우</summary>
+
+```mermaid
+sequenceDiagram
+  participant S as Scheduler
+  participant B as Backend
+  participant A as Analyzer
+  participant D as PostgreSQL
+
+  S->>B: analyze_new_biddings()
+  B->>D: SELECT WHERE category IS NULL
+  D-->>B: 미분석 공고 리스트
+  
+  loop 각 공고
+    B->>A: classify_category(title)
+    A-->>B: "IT" (키워드 매칭)
+    B->>A: generate_tags(budget, dates)
+    A-->>B: ["고액", "빠른마감"]
+    B->>D: UPDATE ai_category, ai_tags
+  end
+  
+  Note over B,D: 분류 완료
+```
+
+</details>
+
+<details>
+  <summary>사용자 검색 및 필터링 플로우</summary>
+
+```mermaid
+sequenceDiagram
+  participant U as User
+  participant F as React Frontend
+  participant B as FastAPI Backend
+  participant D as PostgreSQL
+
+  U->>F: 검색 조건 입력
+  Note over U,F: 예산, 카테고리, 날짜 등
+  
+  F->>B: GET /api/biddings?filters
+  
+  B->>D: SELECT with WHERE + JOIN
+  Note over B,D: 인덱스 활용
+  
+  D-->>B: 공고 목록
+  B-->>F: JSON Response
+  
+  F->>F: 테이블 렌더링
+  F->>F: 차트 업데이트
+  F-->>U: 검색 결과 표시
+```
+</details>
+
+# 📁 프로젝트 구조
+
+<details>
+<summary> 📂 파일 구조 </summary>
+
+```text
+g2b_project/
+├── g2b/                          # 🐍 Backend (FastAPI)
+│   ├── app.py                    # FastAPI 엔트리포인트
+│   ├── database.py               # PostgreSQL 연결 관리
+│   ├── models.py                 # SQLAlchemy ORM 모델
+│   ├── schemas.py                # Pydantic 스키마
+│   ├── config.py                 # 환경변수 설정
+│   ├── scheduler.py              # 자동 수집 스케줄러
+│   ├── analyzer.py               # 분류 및 태그 로직
+│   │
+│   ├── apis/                     # 🔌 G2B API 연동
+│   │   ├── bidding_api.py        # 입찰공고 수집
+│   │   ├── award_api.py          # 낙찰정보 수집
+│   │   ├── orderplan_api.py      # 발주계획 수집
+│   │   └── main.py               # 전체 수집 오케스트레이션
+│   │
+│   └── routers/                  # 🛣️ REST API 라우터
+│       ├── biddings.py           # 입찰공고 API
+│       ├── awards.py             # 낙찰정보 API
+│       ├── orderplans.py         # 발주계획 API
+│       ├── statistics.py         # 통계 API
+│       └── analysis.py           # 분류 분석 API
+│
+├── g2b_frontend/                 # ⚛️ Frontend (React)
+│   └── src/
+│       ├── pages/
+│       │   └── Dashboard.jsx     # 메인 대시보드
+│       ├── components/
+│       │   ├── filters/          # 검색 필터 컴포넌트
+│       │   ├── tables/           # 데이터 테이블
+│       │   ├── charts/           # 차트 시각화
+│       │   └── modals/           # 상세 정보 모달
+│       └── services/
+│           └── api.js            # Backend API 호출
+│
+├── requirements.txt              # Python 의존성
+├── Dockerfile                    # Docker 이미지 설정
+└── README.md
 </details>
