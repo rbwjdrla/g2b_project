@@ -11,7 +11,7 @@ from .orderplan_api import fetch_plans, upsert_plans
 
 logger = logging.getLogger(__name__)
 
-def run_all(days=2):
+def run_all(days=1):
     """
     전체 데이터 수집
     스케줄러에서 10분마다 자동 실행됨 (기본 2일치, 실시간)

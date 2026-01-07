@@ -94,7 +94,7 @@ def health_check():
 
 # ==================== 수동 수집 ====================
 @app.post("/collect")
-def manual_collect(days: int = 2):
+def manual_collect(days: int = 1):
     """수동 데이터 수집 트리거"""
     from apis.main import run_all
 

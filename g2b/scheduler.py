@@ -21,7 +21,7 @@ def scheduled_job():
 
     try:
         # 1. 데이터 수집 (2일치)
-        run_all(days=2)
+        run_all(days=1)
         logger.info(f"✅ 자동 데이터 수집 완료 ({today})")
 
         # 2. 새로 수집된 데이터 ML 분석
