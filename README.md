@@ -65,7 +65,7 @@
 - **FastAPI** — 비동기 REST API 프레임워크, 자동 문서화(Swagger/ReDoc)
 - **SQLAlchemy** — ORM, 쿼리 빌더, 마이그레이션 관리
 - **Pydantic** — 요청/응답 스키마 검증, 타입 안전성
-- **APScheduler** — 백그라운드 스케줄링(10분 간격 자동 수집)
+- **APScheduler** — 백그라운드 스케줄링
 - **httpx** — 비동기 HTTP 클라이언트(외부 API 연동)
 - **loguru** — 구조적 로깅
 - **python-dotenv** — 환경변수 관리
